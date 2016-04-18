@@ -32,6 +32,7 @@
 #include <linux/inet.h>
 #include <linux/version.h>
 #include <net/net_namespace.h>
+#include <asm/byteorder.h>
 
 #include <linux/netfilter/x_tables.h>
 #include "xt_coova.h"
@@ -230,7 +231,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		else
 			addr.ip = iph->saddr;
 
-		p_bytes = iph->tot_len;
+		p_bytes = be16_to_cpu(iph->tot_len);
 	} else {
 		const struct ipv6hdr *iph = ipv6_hdr(skb);
 
@@ -239,7 +240,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		else
 			memcpy(&addr.in6, &iph->saddr, sizeof(addr.in6));
 
-		p_bytes = iph->payload_len;
+		p_bytes = be16_to_cpu(iph->payload_len);
 	}
 
 	if (info->side != XT_COOVA_DEST) {
