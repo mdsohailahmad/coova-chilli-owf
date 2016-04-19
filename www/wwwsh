@@ -33,5 +33,5 @@ if [ ${CONTENT_LENGTH:-0} -gt 0 ]; then
     $haserl $file < $POST_FILE
     /bin/rm -f $POST_FILE
 else
-    $haserl $file
+    $haserl --shell=/bin/bash $file
 fi
