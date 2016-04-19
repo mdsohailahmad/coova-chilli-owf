@@ -40,7 +40,7 @@ run_up() {
 								print $3
 						}')
 					do
-						ipset add passthrough $pt
+						ipset add passthrough $ip
 					done
 				fi
 			done
