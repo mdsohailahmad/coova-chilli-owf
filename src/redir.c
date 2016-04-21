@@ -596,10 +596,9 @@ static void bstring_buildurl(bstring str, struct redir_conn_t *conn,
      */
     bcatcstr(str, amp);
     bcatcstr(str, "ssl=");
-    if (_options.uamaliasname && _options.domain) {
-      bassignformat(bt, "https://%s.%s:%d/",
+    if (_options.uamaliasname) {
+      bassignformat(bt, "https://%s:%d/",
                     _options.uamaliasname,
-                    _options.domain,
                     _options.uamuiport);
     } else {
       bassignformat(bt, "https://%s:%d/",
