@@ -1679,11 +1679,12 @@ int redir_listen(struct redir_t *redir) {
   int n = 0, tries = 0, success = 0;
   int optval;
 
-  FILE *log = fopen("/tmp/redirlisten_log", "a");
+  FILE *log = fopen("/tmp/redirlisten_log", "w");
+  if(log)
+	  fclose(log);
 
   if ((redir->fd[0] = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-	  fprintf(log, "%s: socket() failed\n", strerror(errno));
-    syslog(LOG_LOCAL0 | LOG_ERR, "%s: socket() failed", strerror(errno));
+    syslog(LOG_ERR, "%s: socket() failed", strerror(errno));
     return -1;
   }
 
@@ -1692,8 +1693,7 @@ int redir_listen(struct redir_t *redir) {
 #ifdef ENABLE_UAMUIPORT
   if (redir->uiport) {
     if ((redir->fd[1] = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		fprintf(log, "%s: socket() faield\n", strerror(errno));
-      syslog(LOG_LOCAL0 | LOG_ERR, "%s: socket() failed", strerror(errno));
+      syslog(LOG_ERR, "%s: socket() failed", strerror(errno));
       close(redir->fd[0]);
       return -1;
     }
@@ -1726,8 +1726,7 @@ int redir_listen(struct redir_t *redir) {
 
     optval = 1;
     if (setsockopt(redir->fd[n], SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
-		fprintf(log, "%s: setsockopt(SO_REUSEADDR)\n", strerror(errno));
-      syslog(LOG_LOCAL0 | LOG_ERR, "%s: setsockopt(SO_REUSEADDR)", strerror(errno));
+      syslog(LOG_ERR, "%s: setsockopt(SO_REUSEADDR)", strerror(errno));
       safe_close(redir->fd[n]);
       redir->fd[n]=0;
       break;
@@ -1736,32 +1735,24 @@ int redir_listen(struct redir_t *redir) {
 #ifdef SO_REUSEPORT
     optval = 1;
     if (setsockopt(redir->fd[n], SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval))) {
-		fprintf(log, "%s: setsockopt(SO_REUSEPORT)\n", strerror(errno));
-      syslog(LOG_LOCAL0 | LOG_ERR, "%s: setsockopt(SO_REUSEPORT)", strerror(errno));
+      syslog(LOG_ERR, "%s: setsockopt(SO_REUSEPORT)", strerror(errno));
       if (errno != ENOPROTOOPT) {
-        if (_options.debug) {
-          fprintf(log, "setsockopt(SO_REUSEPORT) failed hard, aborting.\n");
+        if (_options.debug)
           syslog(LOG_DEBUG, "setsockopt(SO_REUSEPORT) failed hard, aborting.");
-		}
 	safe_close(redir->fd[n]);
 	redir->fd[n]=0;
 	return -1;
       } else {
-        if (_options.debug) {
-          fprintf(log, "setsockopt(SO_REUSEPORT) failed due to proto not available "
-                 "(probably compiled with newer header files), continueing anyways...\n");
-          syslog(LOG_LOCAL0 | LOG_DEBUG, "setsockopt(SO_REUSEPORT) failed due to proto not available "
+        if (_options.debug)
+          syslog(LOG_DEBUG, "setsockopt(SO_REUSEPORT) failed due to proto not available "
                  "(probably compiled with newer header files), continueing anyways...");
-		 }
       }
     }
 #endif
 
     while (bind(redir->fd[n], (struct sockaddr *)&address, sizeof(address)) == -1) {
       if ((EADDRINUSE == errno) && (10 > tries++)) {
-	fprintf(log, "%d IP: %s Port: %d - Waiting for retry.\n",
-               errno, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-	syslog(LOG_LOCAL0 | LOG_WARNING, "%d IP: %s Port: %d - Waiting for retry.",
+	syslog(LOG_WARNING, "%d IP: %s Port: %d - Waiting for retry.",
                errno, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 	if (sleep(5)) { /* In case we got killed */
 	  safe_close(redir->fd[n]);
@@ -1770,13 +1761,10 @@ int redir_listen(struct redir_t *redir) {
 	}
       }
       else {
-	fprintf(log, "%d bind() failed for %s:%d\n",
-               errno, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-	syslog(LOG_LOCAL0 | LOG_ERR, "%d bind() failed for %s:%d",
+	syslog(LOG_ERR, "%d bind() failed for %s:%d",
                errno, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 	if (n == 0 && address.sin_addr.s_addr != INADDR_ANY) {
-	  fprintf(log, "trying INADDR_ANY instead\n");
-	  syslog(LOG_LOCAL0 | LOG_WARNING, "trying INADDR_ANY instead");
+	  syslog(LOG_WARNING, "trying INADDR_ANY instead");
 	  address.sin_addr.s_addr = INADDR_ANY;
 	} else {
 	  safe_close(redir->fd[n]);
@@ -1788,9 +1776,7 @@ int redir_listen(struct redir_t *redir) {
 
     if (redir->fd[n]) {
       if (listen(redir->fd[n], REDIR_MAXLISTEN)) {
-	fprintf(log, "%d listen() failed for %s:%d\n",
-               errno, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-	syslog(LOG_LOCAL0 | LOG_ERR, "%d listen() failed for %s:%d",
+	syslog(LOG_ERR, "%d listen() failed for %s:%d",
                errno, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 	safe_close(redir->fd[n]);
 	redir->fd[n]=0;
@@ -1800,8 +1786,6 @@ int redir_listen(struct redir_t *redir) {
       }
     }
   }
-
-  fclose(log);
 
   return success ? 0 : -1;
 }
