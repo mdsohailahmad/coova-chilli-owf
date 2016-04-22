@@ -1678,10 +1678,6 @@ int redir_listen(struct redir_t *redir) {
   int n = 0, tries = 0, success = 0;
   int optval;
 
-  FILE *log = fopen("/tmp/redirlisten_log", "w");
-  if(log)
-	  fclose(log);
-
   if ((redir->fd[0] = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     syslog(LOG_ERR, "%s: socket() failed", strerror(errno));
     return -1;
