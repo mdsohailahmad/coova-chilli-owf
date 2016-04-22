@@ -125,8 +125,16 @@ _openssl_env_init(openssl_env *env, char *engine, int server) {
    * If ``server'' is 1, the environment is that of a SSL
    * server.
    */
-  const long options = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION;
+  const long options = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3
+#ifndef HAVE_CYASSL
+	  | SSL_OP_NO_COMPRESSION
+#endif
+	  ;
+#ifdef HAVE_CYASSL
+  env->meth = server == 1 ? SSLv23_server_method() : SSLv23_client_method();
+#else
   env->meth = SSLv23_method();
+#endif
   env->ctx = SSL_CTX_new(env->meth);
   SSL_CTX_set_options(env->ctx, options);
   if (_options.sslciphers) {

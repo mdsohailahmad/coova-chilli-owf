@@ -35,7 +35,7 @@ int ippool_print(int fd, struct ippool_t *this) {
   char * sep = "-- %-15s ------------------------------------------------------------\n";
 
 #define ERR 0
-#define USED 1
+#define IPPOOL_USED 1
 #define FREE 2
 #define LIST 3
   int dyn[4] = { 0, 0, 0, 0};
@@ -63,7 +63,7 @@ int ippool_print(int fd, struct ippool_t *this) {
 
     if (this->member[n].in_use) {
       if (this->member[n].next == 0 && this->member[n].prev == 0) {
-	st[USED]++;
+	st[IPPOOL_USED]++;
       } else {
 	st[ERR]++;
       }
@@ -126,13 +126,13 @@ int ippool_print(int fd, struct ippool_t *this) {
 
   snprintf(line, sizeof(line),
 		"Dynamic address: free %d, avail %d, used %d, err %d, sum %d/%d%s\n",
-		dyn[FREE], dyn[LIST], dyn[USED], dyn[ERR], dyn[0]+dyn[1]+dyn[2], this->dynsize,
+		dyn[FREE], dyn[LIST], dyn[IPPOOL_USED], dyn[ERR], dyn[0]+dyn[1]+dyn[2], this->dynsize,
 		dyn[FREE] != dyn[LIST] ? " - Problem!" : "");
   safe_write(fd, line, strlen(line));
 
   snprintf(line, sizeof(line),
 		"Static address: free %d, avail %d, used %d, err %d, sum %d/%d%s\n",
-		stat[FREE], stat[LIST], stat[USED], stat[ERR], stat[0]+stat[1]+stat[2], this->statsize,
+		stat[FREE], stat[LIST], stat[IPPOOL_USED], stat[ERR], stat[0]+stat[1]+stat[2], this->statsize,
 		stat[FREE] != stat[LIST] ? " - Problem!" : "");
   safe_write(fd, line, strlen(line));
 
