@@ -1703,7 +1703,7 @@ int redir_listen(struct redir_t *redir) {
   address.sin_len = sizeof (struct sockaddr_in);
 #endif
 
-  for (n = 0; n < 2 && redir->fd[n]; n++) {
+  for (n = 0; n < 2 && redir->fd[n] >= 0; n++) {
 
     address.sin_addr.s_addr = redir->addr.s_addr;
     switch(n) {
@@ -1769,7 +1769,7 @@ int redir_listen(struct redir_t *redir) {
       }
     }
 
-    if (redir->fd[n]) {
+    if (redir->fd[n] >= 0) {
       if (listen(redir->fd[n], REDIR_MAXLISTEN)) {
 	syslog(LOG_ERR, "%d listen() failed for %s:%d",
                errno, inet_ntoa(address.sin_addr), ntohs(address.sin_port));
