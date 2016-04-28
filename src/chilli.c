@@ -7247,25 +7247,6 @@ int chilli_main(int argc, char **argv) {
   /* foreground                                                   */
   /* If flag not given run as a daemon                            */
   if (!_options.foreground) {
-    FILE *fp = NULL;
-    if (!(fp = freopen("/dev/null", "w", stdout))) {
-      syslog(LOG_ERR, "freopen()");
-    } else {
-      fclose(fp);
-      fp = NULL;
-    }
-    if (!(fp = freopen("/dev/null", "w", stderr))) {
-      syslog(LOG_ERR, "freopen()");
-    } else {
-      fclose(fp);
-      fp = NULL;
-    }
-    if (!(fp = freopen("/dev/null", "r", stdin))) {
-      syslog(LOG_ERR, "freopen()");
-    } else {
-      fclose(fp);
-      fp = NULL;
-    }
 #if defined (__FreeBSD__)  || defined (__APPLE__) || defined (__OpenBSD__)
     if (fork() > 0) {
       exit(0);
