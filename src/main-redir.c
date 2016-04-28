@@ -821,6 +821,11 @@ int main(int argc, char **argv) {
 
   process_options(argc, argv, 1);
 
+  openlog("chilli_redir", LOG_PID, LOG_DAEMON);
+
+  if(!_options.debug)
+	  setlogmask(LOG_UPTO(_options.loglevel));
+
   strlcpy(ifr.ifr_name, _options.dhcpif, sizeof(ifr.ifr_name));
 
 #ifdef SIOCGIFHWADDR
@@ -1131,6 +1136,8 @@ int main(int argc, char **argv) {
   child_killall(SIGKILL);
 
   selfpipe_finish();
+
+  closelog();
 
   return 0;
 }
