@@ -815,6 +815,8 @@ int main(int argc, char **argv) {
 
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
 
+  openlog("chilli_redir", LOG_PID, LOG_DAEMON);
+
   options_init();
 
   chilli_signals(&keep_going, &reload_config);
