@@ -117,18 +117,6 @@
 #include <inttypes.h>
 #endif
 
-#if defined(__linux__)
-#include <asm/types.h>
-#include <linux/if.h>
-#include <linux/if_packet.h>
-#include <linux/if_ether.h>
-#include <linux/if_tun.h>
-#include <linux/netlink.h>
-#include <linux/rtnetlink.h>
-#ifndef HAVE_SYS_UN_H
-#include <linux/un.h>
-#endif
-
 #ifdef HAVE_SYS_SYSINFO_H
 #include <sys/sysinfo.h>
 #else
@@ -171,6 +159,18 @@
 
 #ifdef HAVE_NET_ETHERNET_H
 #include <net/ethernet.h>
+#endif
+
+#if defined(__linux__)
+#include <asm/types.h>
+#include <linux/if.h>
+#include <linux/if_packet.h>
+#include <linux/if_ether.h>
+#include <linux/if_tun.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#ifndef HAVE_SYS_UN_H
+#include <linux/un.h>
 #endif
 
 #ifdef HAVE_ASM_TYPES_H
