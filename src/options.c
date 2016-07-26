@@ -383,12 +383,14 @@ int options_fromfd(int fd, bstring bt) {
     regfree(&_options.regex_pass_throughs[i].re_path);
     regfree(&_options.regex_pass_throughs[i].re_qs);
 #else
+#if defined (__UCLIBC__) || defined(__GLIBC__)
     if (_options.regex_pass_throughs[i].re_host.allocated)
       regfree(&_options.regex_pass_throughs[i].re_host);
     if (_options.regex_pass_throughs[i].re_path.allocated)
       regfree(&_options.regex_pass_throughs[i].re_path);
     if (_options.regex_pass_throughs[i].re_qs.allocated)
       regfree(&_options.regex_pass_throughs[i].re_qs);
+#endif
 #endif
   }
 #endif

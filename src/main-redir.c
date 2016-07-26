@@ -511,7 +511,9 @@ check_regex(regex_t *re, char *regex, char *s) {
 #if defined (__FreeBSD__) || defined (__APPLE__) || defined (__OpenBSD__) || defined (__NetBSD__)
   if (!re->re_g)
 #else
+#if defined (__UCLIBC__) || defined(__GLIBC__)
     if (!re->allocated)
+#endif
 #endif
     {
       if ((ret = regcomp(re, regex, REG_EXTENDED | REG_NOSUB)) != 0) {
