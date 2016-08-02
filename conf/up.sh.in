@@ -17,7 +17,10 @@ ipt_in() {
 run_up() {
 	if [[ -n $TUNTAP ]]
 	then
-		# ifconfig $TUNTAP mtu $MTU
+		ifconfig $TUNTAP txqueuelen 1000
+		if type -p tc &> /dev/null; then
+			tc qdisc add dev $TUNTAP parent root sfq perturb 10 headdrop
+		fi
 		if [[ -n $KNAME ]]
 		then
 			ipt -I FORWARD -i $DHCPIF -m coova --name $KNAME -j ACCEPT
