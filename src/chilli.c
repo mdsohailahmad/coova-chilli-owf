@@ -812,6 +812,8 @@ int runscript(struct app_conn_t *appconn, char* script,
   set_env("ACCT_INTERIM_INTERVAL", VAL_USHORT, &appconn->s_params.interim_interval, 0);
   set_env("WISPR_LOCATION_ID", VAL_STRING, _options.radiuslocationid, 0);
   set_env("WISPR_LOCATION_NAME", VAL_STRING, _options.radiuslocationname, 0);
+  syslog(LOG_INFO, "bandwidthmaxup: %ld", appconn->s_params.bandwidthmaxup);
+  syslog(LOG_INFO, "bandwidthmaxdown: %ld", appconn->s_params.bandwidthmaxdown);
   set_env("WISPR_BANDWIDTH_MAX_UP", VAL_ULONG, &appconn->s_params.bandwidthmaxup, 0);
   set_env("WISPR_BANDWIDTH_MAX_DOWN", VAL_ULONG, &appconn->s_params.bandwidthmaxdown, 0);
   /*set_env("WISPR-SESSION_TERMINATE_TIME", VAL_USHORT, &appconn->sessionterminatetime, 0);*/
