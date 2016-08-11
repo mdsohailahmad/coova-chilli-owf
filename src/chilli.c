@@ -740,6 +740,8 @@ void set_env(char *name, char type, void *value, int len) {
     case VAL_ULONG:
       snprintf(s, sizeof(s), "%ld", (long int)*(uint32_t *)value);
       v = s;
+	  if(strstr(name, "WISPR"))
+	  	syslog(LOG_INFO, "%s: %s", name, v);
       break;
 
     case VAL_ULONG64:
@@ -812,8 +814,8 @@ int runscript(struct app_conn_t *appconn, char* script,
   set_env("ACCT_INTERIM_INTERVAL", VAL_USHORT, &appconn->s_params.interim_interval, 0);
   set_env("WISPR_LOCATION_ID", VAL_STRING, _options.radiuslocationid, 0);
   set_env("WISPR_LOCATION_NAME", VAL_STRING, _options.radiuslocationname, 0);
-  syslog(LOG_INFO, "bandwidthmaxup: %ld", appconn->s_params.bandwidthmaxup);
-  syslog(LOG_INFO, "bandwidthmaxdown: %ld", appconn->s_params.bandwidthmaxdown);
+  syslog(LOG_INFO, "bandwidthmaxup: %" PRIu64, appconn->s_params.bandwidthmaxup);
+  syslog(LOG_INFO, "bandwidthmaxdown: %" PRIu64, appconn->s_params.bandwidthmaxdown);
   set_env("WISPR_BANDWIDTH_MAX_UP", VAL_ULONG, &appconn->s_params.bandwidthmaxup, 0);
   set_env("WISPR_BANDWIDTH_MAX_DOWN", VAL_ULONG, &appconn->s_params.bandwidthmaxdown, 0);
   /*set_env("WISPR-SESSION_TERMINATE_TIME", VAL_USHORT, &appconn->sessionterminatetime, 0);*/
