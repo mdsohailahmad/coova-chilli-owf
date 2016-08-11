@@ -23,9 +23,6 @@ run_up() {
 		fi
 		if [[ -n $KNAME ]]
 		then
-			ipt -I FORWARD -i $DHCPIF -m coova --name $KNAME -j ACCEPT
-			ipt -I FORWARD -o $DHCPIF -m coova --name $KNAME --dest -j ACCEPT
-
 			ifconfig $DHCPIF $ADDR netmask $MASK
 			ifconfig $TUNTAP 0.0.0.0
 
@@ -52,14 +49,22 @@ run_up() {
 				fi
 			done
 
+			# order matters here -
+			# coova rule should be on the top so that
+			# garden accounting works
 			ipt -I FORWARD -m set --match-set passthrough src -j ACCEPT
 			ipt -I FORWARD -m set --match-set passthrough dst -j ACCEPT
-			ipt -I PREROUTING -t nat -i $DHCPIF -p tcp --dport 80 -m set ! --match-set passthrough dst -m set ! --match-set logged_users src -j DNAT --to $ADDR:$UAMPORT
+			ipt -I FORWARD -i $DHCPIF -m coova --name $KNAME -j ACCEPT
+			ipt -I FORWARD -o $DHCPIF -m coova --name $KNAME --dest -j ACCEPT
 
+			# for bandwidth control using tc filters
 			for wan_if in $HS_WANIF; do
 				ipt -I FORWARD -t mangle -i $DHCPIF -o $wan_if -j IPMARK --addr=src
 				ipt -I FORWARD -t mangle -i $wan_if -o $DHCPIF -j IPMARK --addr=dst
 			done
+
+			# for redirection
+			ipt -I PREROUTING -t nat -i $DHCPIF -p tcp --dport 80 -m set ! --match-set passthrough dst -m set ! --match-set logged_users src -j DNAT --to $ADDR:$UAMPORT
 		else
 			if [ "$LAYER3" != "1" ]
 			then
