@@ -29,13 +29,17 @@ run_up() {
 			ifconfig $DHCPIF $ADDR netmask $MASK
 			ifconfig $TUNTAP 0.0.0.0
 
-			ipset destroy passthrough
-			ipset create passthrough hash:ip
+			ipset -q -! destroy passthrough
+			ipset -q -! create passthrough hash:ip
+			ipset -q -! flush passthrough
+			ipset -q -! destroy logged_users
+			ipset -q -! create logged_users hash:ip
+			ipset -q -! flush logged_users
 
 			local PT=${HS_UAMALLOW//,/ }
 			for pt in $PT; do
 				if [[ $pt =~ ([0-9]+\.)+[0-9]+ ]]; then
-					ipset add passthrough $pt
+					ipset -q -! add passthrough $pt
 				else
 					for ip in $(nslookup $pt | awk '/Name/ { print_addr=1 }
 						/Address [0-9]+: ([0-9]+\.)+[0-9]+/ {
@@ -43,14 +47,19 @@ run_up() {
 								print $3
 						}')
 					do
-						ipset add passthrough $ip
+						ipset -q -! add passthrough $ip
 					done
 				fi
 			done
 
 			ipt -I FORWARD -m set --match-set passthrough src -j ACCEPT
 			ipt -I FORWARD -m set --match-set passthrough dst -j ACCEPT
-			ipt -I PREROUTING -t nat -i $DHCPIF -p tcp --dport 80 -m set ! --match-set passthrough dst -m mark --mark 0 -j DNAT --to $ADDR:$UAMPORT
+			ipt -I PREROUTING -t nat -i $DHCPIF -p tcp --dport 80 -m set ! --match-set passthrough dst -m set ! --match-set logged_users src -j DNAT --to $ADDR:$UAMPORT
+
+			for wan_if in $HS_WANIF; do
+				ipt -I FORWARD -t mangle -i $DHCPIF -o $wan_if -j IPMARK --addr=src
+				ipt -I FORWARD -t mangle -i $wan_if -o $DHCPIF -j IPMARK --addr=dst
+			done
 		else
 			if [ "$LAYER3" != "1" ]
 			then
