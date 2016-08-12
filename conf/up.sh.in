@@ -29,9 +29,9 @@ run_up() {
 			ipset -q -! destroy passthrough
 			ipset -q -! create passthrough hash:ip
 			ipset -q -! flush passthrough
-			ipset -q -! destroy logged_users
-			ipset -q -! create logged_users hash:ip
-			ipset -q -! flush logged_users
+			ipset -q -! destroy authenticated
+			ipset -q -! create authenticated hash:ip
+			ipset -q -! flush authenticated
 
 			local PT=${HS_UAMALLOW//,/ }
 			for pt in $PT; do
@@ -64,7 +64,7 @@ run_up() {
 			done
 
 			# for redirection
-			ipt -I PREROUTING -t nat -i $DHCPIF -p tcp --dport 80 -m set ! --match-set passthrough dst -m set ! --match-set logged_users src -j DNAT --to $ADDR:$UAMPORT
+			ipt -I PREROUTING -t nat -i $DHCPIF -p tcp --dport 80 -m set ! --match-set passthrough dst -m set ! --match-set authenticated src -j DNAT --to $ADDR:$UAMPORT
 		else
 			if [ "$LAYER3" != "1" ]
 			then
