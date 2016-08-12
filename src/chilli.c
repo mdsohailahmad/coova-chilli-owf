@@ -763,6 +763,11 @@ void set_env(char *name, char type, void *value, int len) {
         v = (char*)value;
       }
       break;
+
+    case VAL_IN_ADDR_HEX:
+      snprintf(s, sizeof(s), "0x%02x", ntohl(((struct in_addr *)value)->s_addr));
+      v = s;
+      break;
   }
 
   if (name != NULL && v != NULL) {
@@ -798,6 +803,7 @@ int runscript(struct app_conn_t *appconn, char* script,
   set_env("NAS_IP_ADDRESS", VAL_IN_ADDR,&_options.radiuslisten, 0);
   set_env("SERVICE_TYPE", VAL_STRING, "1", 0);
   set_env("FRAMED_IP_ADDRESS", VAL_IN_ADDR, &appconn->hisip, 0);
+  set_env("FRAMED_IP_ADDRESS_HEX", VAL_IN_ADDR_HEX, &appconn->hisip, 0);
   set_env("FILTER_ID", VAL_STRING, appconn->s_params.filteridbuf, 0);
   set_env("STATE", VAL_STRING, appconn->s_state.redir.statebuf, appconn->s_state.redir.statelen);
   set_env("CLASS", VAL_STRING, appconn->s_state.redir.classbuf, appconn->s_state.redir.classlen);
@@ -7786,17 +7792,19 @@ int chilli_main(int argc, char **argv) {
       syslog(LOG_WARNING, "Not stopping sessions! seskeepalive should be used with compile option --enable-binstatusfile");
 #endif
 
-      // run down script for each active connection if kname is enabled
+      // run down script for each authenticated connection if kname is enabled
+      // Modification by nilesh
       if(_options.kname) {
-          struct app_conn_t *appconn;
-          for(appconn = firstusedconn; appconn; appconn = appconn->next) {
-              if (_options.condown && appconn->s_state.authenticated && !(appconn->s_params.flags & NO_SCRIPT)) {
-                  if (_options.debug)
-                      syslog(LOG_DEBUG, "Calling connection down script: %s\n",_options.condown);
-                  runscript(appconn, _options.condown, 0, 0);
-              }
+        struct app_conn_t *appconn;
+        for(appconn = firstusedconn; appconn; appconn = appconn->next) {
+          if (_options.condown && appconn->s_state.authenticated && !(appconn->s_params.flags & NO_SCRIPT)) {
+            if (_options.debug)
+              syslog(LOG_DEBUG, "Calling connection down script: %s\n",_options.condown);
+            runscript(appconn, _options.condown, 0, 0);
           }
+        }
       }
+      // End modification
     } else {
       killconn();
 #ifdef ENABLE_STATFILE

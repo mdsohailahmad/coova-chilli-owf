@@ -168,6 +168,7 @@ struct app_conn_t {
 #define VAL_ULONG    3
 #define VAL_ULONG64  4
 #define VAL_USHORT   5
+#define VAL_IN_ADDR_HEX 6
 
 typedef enum {
   ACCT_USER,
