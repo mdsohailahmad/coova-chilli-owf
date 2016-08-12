@@ -738,19 +738,17 @@ void set_env(char *name, char type, void *value, int len) {
       break;
 
     case VAL_ULONG:
-      snprintf(s, sizeof(s), "%ld", (long int)*(uint32_t *)value);
+      snprintf(s, sizeof(s), "%" PRIu32, *(uint32_t *)value);
       v = s;
-	  if(strstr(name, "WISPR"))
-	  	syslog(LOG_INFO, "%s: %s", name, v);
       break;
 
     case VAL_ULONG64:
-      snprintf(s, sizeof(s), "%ld", (long int)*(uint64_t *)value);
+      snprintf(s, sizeof(s), "%" PRIu64, *(uint64_t *)value);
       v = s;
       break;
 
     case VAL_USHORT:
-      snprintf(s, sizeof(s), "%d", (int)(*(uint16_t *)value));
+      snprintf(s, sizeof(s), "%" PRIu16, *(uint16_t *)value);
       v = s;
       break;
 
@@ -814,10 +812,8 @@ int runscript(struct app_conn_t *appconn, char* script,
   set_env("ACCT_INTERIM_INTERVAL", VAL_USHORT, &appconn->s_params.interim_interval, 0);
   set_env("WISPR_LOCATION_ID", VAL_STRING, _options.radiuslocationid, 0);
   set_env("WISPR_LOCATION_NAME", VAL_STRING, _options.radiuslocationname, 0);
-  syslog(LOG_INFO, "bandwidthmaxup: %" PRIu64, appconn->s_params.bandwidthmaxup);
-  syslog(LOG_INFO, "bandwidthmaxdown: %" PRIu64, appconn->s_params.bandwidthmaxdown);
-  set_env("WISPR_BANDWIDTH_MAX_UP", VAL_ULONG, &appconn->s_params.bandwidthmaxup, 0);
-  set_env("WISPR_BANDWIDTH_MAX_DOWN", VAL_ULONG, &appconn->s_params.bandwidthmaxdown, 0);
+  set_env("WISPR_BANDWIDTH_MAX_UP", VAL_ULONG64, &appconn->s_params.bandwidthmaxup, 0);
+  set_env("WISPR_BANDWIDTH_MAX_DOWN", VAL_ULONG64, &appconn->s_params.bandwidthmaxdown, 0);
   /*set_env("WISPR-SESSION_TERMINATE_TIME", VAL_USHORT, &appconn->sessionterminatetime, 0);*/
   set_env("COOVACHILLI_MAX_INPUT_OCTETS", VAL_ULONG64, &appconn->s_params.maxinputoctets, 0);
   set_env("COOVACHILLI_MAX_OUTPUT_OCTETS", VAL_ULONG64, &appconn->s_params.maxoutputoctets, 0);
@@ -7789,6 +7785,18 @@ int chilli_main(int argc, char **argv) {
 #else
       syslog(LOG_WARNING, "Not stopping sessions! seskeepalive should be used with compile option --enable-binstatusfile");
 #endif
+
+      // run down script for each active connection if kname is enabled
+      if(_options.kname) {
+          struct app_conn_t *appconn;
+          for(appconn = firstusedconn; appconn; appconn = appconn->next) {
+              if (_options.condown && appconn->s_state.authenticated && !(appconn->s_params.flags & NO_SCRIPT)) {
+                  if (_options.debug)
+                      syslog(LOG_DEBUG, "Calling connection down script: %s\n",_options.condown);
+                  runscript(appconn, _options.condown, 0, 0);
+              }
+          }
+      }
     } else {
       killconn();
 #ifdef ENABLE_STATFILE
