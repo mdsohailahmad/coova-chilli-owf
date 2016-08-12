@@ -26,13 +26,6 @@ run_up() {
 			ifconfig $DHCPIF $ADDR netmask $MASK
 			ifconfig $TUNTAP 0.0.0.0
 
-			ipset -q -! destroy passthrough
-			ipset -q -! create passthrough hash:ip
-			ipset -q -! flush passthrough
-			ipset -q -! destroy authenticated
-			ipset -q -! create authenticated hash:ip
-			ipset -q -! flush authenticated
-
 			local PT=${HS_UAMALLOW//,/ }
 			for pt in $PT; do
 				if [[ $pt =~ ([0-9]+\.)+[0-9]+ ]]; then
