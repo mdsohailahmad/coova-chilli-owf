@@ -43,12 +43,12 @@ run_up() {
 			done
 
 			# order matters here -
-			# coova rule should be on the top so that
-			# garden accounting works
-			ipt -I FORWARD -m set --match-set passthrough src -j ACCEPT
-			ipt -I FORWARD -m set --match-set passthrough dst -j ACCEPT
+			# coova rule should come after passthrough rule
+			# so that passthrough goes in accounted traffic
 			ipt -I FORWARD -i $DHCPIF -m coova --name $KNAME -j ACCEPT
 			ipt -I FORWARD -o $DHCPIF -m coova --name $KNAME --dest -j ACCEPT
+			ipt -I FORWARD -m set --match-set passthrough src -j ACCEPT
+			ipt -I FORWARD -m set --match-set passthrough dst -j ACCEPT
 
 			# for bandwidth control using tc filters
 			for wan_if in $HS_WANIF; do
