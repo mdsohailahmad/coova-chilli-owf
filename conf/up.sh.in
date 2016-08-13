@@ -17,14 +17,17 @@ ipt_in() {
 run_up() {
 	if [[ -n $TUNTAP ]]
 	then
-		ifconfig $TUNTAP txqueuelen 1000
-		if type -p tc &> /dev/null; then
-			tc qdisc add dev $TUNTAP parent root sfq perturb 10 headdrop
+		if [[ -z $KNAME ]]; then
+			ifconfig $TUNTAP txqueuelen 1000
+			if type -p tc &> /dev/null; then
+				tc qdisc add dev $TUNTAP parent root sfq perturb 10 headdrop
+			fi
 		fi
 		if [[ -n $KNAME ]]
 		then
 			ifconfig $DHCPIF $ADDR netmask $MASK
-			ifconfig $TUNTAP 0.0.0.0
+			ifconfig $TUNTAP 0.0.0.0 down
+			ifconfig $DHCPIF -promisc
 
 			local PT=${HS_UAMALLOW//,/ }
 			for pt in $PT; do
@@ -44,7 +47,7 @@ run_up() {
 
 			# order matters here -
 			# coova rule should come after passthrough rule
-			# so that passthrough goes in accounted traffic
+			# so that passthrough doesn't go in accounted traffic
 			ipt -I FORWARD -i $DHCPIF -m coova --name $KNAME -j ACCEPT
 			ipt -I FORWARD -o $DHCPIF -m coova --name $KNAME --dest -j ACCEPT
 			ipt -I FORWARD -m set --match-set passthrough src -j ACCEPT
