@@ -32,7 +32,7 @@ run_up() {
 			local PT=${HS_UAMALLOW//,/ }
 			for pt in $PT; do
 				if [[ $pt =~ ([0-9]+\.)+[0-9]+ ]]; then
-					ipset -q -! add passthrough $pt
+					ipset -q add passthrough $pt
 				else
 					for ip in $(nslookup $pt | awk '/Name/ { print_addr=1 }
 						/Address [0-9]+: ([0-9]+\.)+[0-9]+/ {
@@ -40,35 +40,23 @@ run_up() {
 								print $3
 						}')
 					do
-						ipset -q -! add passthrough $ip
+						ipset -q add passthrough $ip
 					done
 				fi
 			done
 
-			# iptables rules here are added by insert -I option, so the rules should be in bottom-up order
-			# like a stack. Last added rule will come on the top and be attempted first for matching!
-
-			# DROP traffic on $DHCPIF so that non authenticated users do not get internet
-			# this rule will go after the coova rule below
-			ipt -I FORWARD -i $DHCPIF -j DROP
-			ipt -I FORWARD -o $DHCPIF -j DROP
-
-			# order matters here -
-			# coova rule should come after passthrough rule
-			# to avoid accounting of passthrough traffic
-			ipt -I FORWARD -i $DHCPIF -m coova --name $KNAME -j ACCEPT
-			ipt -I FORWARD -o $DHCPIF -m coova --name $KNAME --dest -j ACCEPT
-			ipt -I FORWARD -m set --match-set passthrough src -j ACCEPT
-			ipt -I FORWARD -m set --match-set passthrough dst -j ACCEPT
-
 			# for bandwidth control using tc filters
 			for wan_if in $HS_WANIF; do
-				ipt -I FORWARD -t mangle -i $DHCPIF -o $wan_if -j IPMARK --addr=src
-				ipt -I FORWARD -t mangle -i $wan_if -o $DHCPIF -j IPMARK --addr=dst
+				ipt -A FORWARD -t mangle -i $DHCPIF -o $wan_if -j IPMARK --addr=src
+				ipt -A FORWARD -t mangle -i $wan_if -o $DHCPIF -j IPMARK --addr=dst
 			done
 
-			# for redirection
-			ipt -I PREROUTING -t nat -i $DHCPIF -p tcp --dport 80 -m set ! --match-set passthrough dst -m set ! --match-set authenticated src -j DNAT --to $ADDR:$UAMPORT
+			for rule in $(uci get system.smartap.firewall_rules_with_ip); do
+				uci set firewall.${rule}.src_dip=$ADDR
+			done
+
+			uci commit
+			/sbin/fw3 -q reload
 		else
 			if [ "$LAYER3" != "1" ]
 			then
@@ -121,18 +109,18 @@ run_up() {
 					ipt -I FORWARD -i $TUNTAP \! -o $wan_if -j DROP
 				ipt -I FORWARD -i $TUNTAP -o $wan_if -j ACCEPT
 			done
+			
+			# if KNAME is set, use DHCPIF otherwise use TUNTAP
+			local lanIf=${KNAME:+$DHCPIF}
+
+			[ "$HS_LOCAL_DNS" == "on" ] && {
+				ipt -I PREROUTING -t nat -i ${lanIf:-$TUNTAP} -p udp --dport 53 -j DNAT --to-destination $ADDR
+				ipt -I PREROUTING -t nat -i ${lanIf:-$TUNTAP} -p tcp --dport 53 -j DNAT --to-destination $ADDR
+			}
+
+			# redirect port 80 requests to self to UAMPORT
+			ipt -I PREROUTING -t nat -i ${lanIf:-$TUNTAP} -d $ADDR -p tcp --dport 80 -j DNAT --to-destination $ADDR:$UAMPORT
 		fi
-
-		# if KNAME is set, use DHCPIF otherwise use TUNTAP
-		local lanIf=${KNAME:+$DHCPIF}
-
-		[ "$HS_LOCAL_DNS" == "on" ] && {
-			ipt -I PREROUTING -t nat -i ${lanIf:-$TUNTAP} -p udp --dport 53 -j DNAT --to-destination $ADDR
-			ipt -I PREROUTING -t nat -i ${lanIf:-$TUNTAP} -p tcp --dport 53 -j DNAT --to-destination $ADDR
-		}
-
-		# redirect port 80 requests to self to UAMPORT
-		ipt -I PREROUTING -t nat -i ${lanIf:-$TUNTAP} -d $ADDR -p tcp --dport 80 -j DNAT --to-destination $ADDR:$UAMPORT
 	fi
 }
 
