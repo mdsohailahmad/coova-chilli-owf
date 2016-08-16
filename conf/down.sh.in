@@ -5,9 +5,13 @@ TUNTAP=$(basename $DEV)
 run_down() {
 	rm -f @VARRUN@/chilli.$TUNTAP-do.sh
 	# site specific stuff optional
-	[ -e @SYSCONFDIR@/chilli/ipdown.sh ] && . @SYSCONFDIR@/chilli/ipdown.sh
+	[[ -e @SYSCONFDIR@/chilli/ipdown.sh ]] && . @SYSCONFDIR@/chilli/ipdown.sh
 	/sbin/fw3 -q reload
 	rm -f @VARRUN@/chilli.$TUNTAP-undo.sh
+	if [[ -n $KNAME ]]; then
+		ipset flush passthrough
+		ipset flush authenticated
+	fi
 }
 
 run_down
