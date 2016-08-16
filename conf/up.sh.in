@@ -51,7 +51,7 @@ run_up() {
 				ipt -A FORWARD -t mangle -i $wan_if -o $DHCPIF -j IPMARK --addr=dst
 			done
 
-			for rule in $(uci get system.smartap.firewall_rules_with_ip); do
+			for rule in $(uci get system.smartap.firewall_rules_with_lan_ip); do
 				uci set firewall.${rule}.src_dip=$ADDR
 			done
 
