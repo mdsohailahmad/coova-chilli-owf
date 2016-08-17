@@ -48,15 +48,10 @@ run_up() {
 			done
 
 			# for bandwidth control using tc filters
-			for wan_if in $HS_WANIF; do
-				ipt -A FORWARD -t mangle -i $DHCPIF -o $wan_if -j IPMARK --addr=src
-				ipt -A FORWARD -t mangle -i $wan_if -o $DHCPIF -j IPMARK --addr=dst
-			done
+			ipt -A FORWARD -t mangle -i $DHCPIF -j IPMARK --addr=src
+			ipt -A FORWARD -t mangle -o $DHCPIF -j IPMARK --addr=dst
 
-			for rule in $(uci get system.smartap.firewall_rules_with_lan_ip); do
-				uci set firewall.${rule}.src_dip=$ADDR
-			done
-
+			uci set firewall.@redirect[0].src_dip=$ADDR
 			uci commit
 			/sbin/fw3 -q reload
 		else
