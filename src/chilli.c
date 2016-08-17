@@ -36,6 +36,7 @@ struct rtmon_t _rtmon;
 #endif
 
 static int connections=0;
+static uint64_t authenticated_connections=0;
 struct app_conn_t *firstfreeconn=0; /* First free in linked list */
 struct app_conn_t *lastfreeconn=0;  /* Last free in linked list */
 struct app_conn_t *firstusedconn=0; /* First used in linked list */
@@ -836,6 +837,7 @@ int runscript(struct app_conn_t *appconn, char* script,
   set_env("SESSION_TIME", VAL_ULONG, &sessiontime, 0);
   sessiontime = mainclock_diffu(appconn->s_state.last_up_time);
   set_env("IDLE_TIME", VAL_ULONG, &sessiontime, 0);
+  set_env("NUM_ONLINE_USERS", VAL_ULONG64, &authenticated_connections, 0);
 
   if (loc) {
     set_env("LOCATION", VAL_STRING, loc, 0);
@@ -1047,6 +1049,8 @@ int chilli_getconn(struct app_conn_t **conn, uint32_t ip,
 
 static int dnprot_terminate(struct app_conn_t *appconn) {
   appconn->s_state.authenticated = 0;
+  if(authenticated_connections > 0)
+    authenticated_connections--;
 #ifdef ENABLE_SESSIONSTATE
   appconn->s_state.session_state = 0;
 #endif
@@ -2334,6 +2338,7 @@ int dnprot_accept(struct app_conn_t *appconn) {
   if (!(appconn->s_params.flags & REQUIRE_UAM_AUTH)) {
     /* This is the one and only place state is switched to authenticated */
     appconn->s_state.authenticated = 1;
+    authenticated_connections++;
 
 #ifdef ENABLE_SESSIONSTATE
     appconn->s_state.session_state =
