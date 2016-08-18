@@ -3,15 +3,12 @@
 TUNTAP=$(basename $DEV)
 
 run_down() {
-	rm -f @VARRUN@/chilli.$TUNTAP-do.sh
 	# site specific stuff optional
 	[[ -e @SYSCONFDIR@/chilli/ipdown.sh ]] && . @SYSCONFDIR@/chilli/ipdown.sh
-	/sbin/fw3 -q reload
-	rm -f @VARRUN@/chilli.$TUNTAP-undo.sh
-	if [[ -n $KNAME ]]; then
-		ipset flush passthrough
-		ipset flush authenticated
-	fi
+
+	# remove chilli specific firewall rules
+	rm -f @VARRUN@/chilli.$TUNTAP-*.sh
+	/etc/init.d/firewall restart
 }
 
 run_down
