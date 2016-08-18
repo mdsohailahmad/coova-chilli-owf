@@ -45,14 +45,14 @@ run_up() {
 				fi
 			done
 
-			ipt -A FORWARD -t mangle -i $DHCPIF -m comment --comment 'Mark packets LAN->WAN with src address for tc filter' -j IPMARK --addr=src
-			ipt -A FORWARD -t mangle -o $DHCPIF -m comment --comment 'Mark packets WAN->LAN with dst address for tc filter' -j IPMARK --addr=dst
-			ipt -A forwarding_lan_rule -m set --set passthrough dst -m comment --comment 'Allow LAN->passthrough' -j ACCEPT
-			ipt -A forwarding_wan_rule -m set --set passthrough src -m comment --comment 'Allow passthrough->LAN' -j ACCEPT
-			ipt -A forwarding_lan_rule -m coova -m comment --comment 'Allow authenticated clients LAN->WAN' -j ACCEPT
-			ipt -A forwarding_wan_rule -m coova --dest -m comment --comment 'Allow authenticated clients WAN->LAN' -j ACCEPT
-			ipt -t nat -A prerouting_lan_rule -m set ! --set passthrough dst -m set ! --set authenticated src \
-				-m comment --comment 'Redirect port 80 for non-passthrough, non-authenticated to UAM' -j REDIRECT --to-ports $UAMPORT
+			ipt -A FORWARD -t mangle -i $DHCPIF -m comment --comment "'Mark packets LAN->WAN with src address for tc filter'" -j IPMARK --addr=src
+			ipt -A FORWARD -t mangle -o $DHCPIF -m comment --comment "'Mark packets WAN->LAN with dst address for tc filter'" -j IPMARK --addr=dst
+			ipt -A forwarding_lan_rule -m set --match-set passthrough dst -m comment --comment "'Allow LAN->passthrough'" -j ACCEPT
+			ipt -A forwarding_wan_rule -m set --match-set passthrough src -m comment --comment "'Allow passthrough->LAN'" -j ACCEPT
+			ipt -A forwarding_lan_rule -m coova -m comment --comment "'Allow authenticated clients LAN->WAN'" -j ACCEPT
+			ipt -A forwarding_wan_rule -m coova --dest -m comment --comment "'Allow authenticated clients WAN->LAN'" -j ACCEPT
+			ipt -A prerouting_lan_rule -t nat -p tcp --dport 80 -m set ! --match-set passthrough dst -m set ! --match-set authenticated src \
+				-m comment --comment "'Redirect port 80 for non-passthrough, non-authenticated to UAM'" -j REDIRECT --to-ports $UAMPORT
 		else
 			if [ "$LAYER3" != "1" ]
 			then
@@ -108,11 +108,11 @@ run_up() {
 		fi
 
 		[ "$HS_LOCAL_DNS" == "on" ] && {
-			ipt -t nat -A prerouting_lan_rule -p udp --dport 53 -m comment --comment 'Rewrite DNS to self' -j REDIRECT
-			ipt -t nat -A prerouting_lan_rule -p tcp --dport 53 -m comment --comment 'Rewrite DNS to self' -j REDIRECT
+			ipt -t nat -A prerouting_lan_rule -p udp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
+			ipt -t nat -A prerouting_lan_rule -p tcp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
 		}
 
-		ipt -t nat -A prerouting_lan_rule -d $ADDR -p tcp --dport 80 -m comment --comment 'Rewrite port 80 on LAN to UAM' -j REDIRECT --to-ports $UAMPORT
+		ipt -t nat -A prerouting_lan_rule -d $ADDR -p tcp --dport 80 -m comment --comment "'Rewrite packets to self port 80 on LAN to UAM'" -j REDIRECT --to-ports $UAMPORT
 		/etc/init.d/firewall restart
 	fi
 }
