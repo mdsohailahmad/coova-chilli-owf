@@ -29,18 +29,13 @@ run_up() {
 			ifconfig $TUNTAP 0.0.0.0 down
 			ifconfig $DHCPIF -promisc
 
-			local PT=${HS_UAMALLOW//,/ }
-			for pt in $PT; do
+			ipset add passthrough $ADDR
+			for pt in ${HS_UAMALLOW//,/ }; do
 				if [[ $pt =~ ([0-9]+\.)+[0-9]+ ]]; then
-					ipset add passthrough $pt
+					ipset -q add passthrough $pt
 				else
-					for ip in $(nslookup $pt | awk '/Name/ { print_addr=1 }
-						/Address [0-9]+: ([0-9]+\.)+[0-9]+/ {
-							if(print_addr)
-								print $3
-						}')
-					do
-						ipset add passthrough $ip
+					for ip in $(name2ip $pt); do
+						ipset -q add passthrough $ip
 					done
 				fi
 			done
