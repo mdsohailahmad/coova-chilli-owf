@@ -141,10 +141,37 @@ kmod_coova_sync() {
               appconn->s_state.input_packets = pin;
               appconn->s_state.output_packets = pout;
             } else {
-              appconn->s_state.output_octets = bin;
-              appconn->s_state.input_octets = bout;
-              appconn->s_state.output_packets = pin;
-              appconn->s_state.input_packets = pout;
+              /*
+               * Changes by Nilesh
+               * Synchronize authentication state of appconn and
+               * kernel module to update kernel module on firewall restarts
+               *
+               * Simiarly add up counters if kernel module reports less number
+               * compared to what we already have
+               */
+
+              if(appconn->s_state.authenticated != state)
+                kmod_coova_update(appconn);
+
+              if(bin < appconn->s_state.output_octets)
+                appconn->s_state.output_octets += bin;
+              else
+                appconn->s_state.output_octets = bin;
+
+              if(bout < appconn->s_state.input_octets)
+                appconn->s_state.input_octets += bout;
+              else
+                appconn->s_state.input_octets = bout;
+
+              if(pin < appconn->s_state.output_packets)
+                appconn->s_state.output_packets += pin;
+              else
+                appconn->s_state.output_packets = pin;
+
+              if(pout < appconn->s_state.input_packets)
+                appconn->s_state.input_packets += pout;
+              else
+                appconn->s_state.input_packets = pout;
             }
           } else {
             syslog(LOG_DEBUG, "Unknown entry");
