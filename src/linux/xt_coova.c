@@ -257,6 +257,8 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	e = coova_entry_lookup(t, &addr, par->match->family);
 
 	if (e == NULL) {
+		if (info->check)
+			goto out;
 		e = coova_entry_init(t, &addr, par->match->family);
 		if (e == NULL)
 			goto out;

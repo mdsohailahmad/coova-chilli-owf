@@ -13,6 +13,7 @@ struct xt_coova_mtinfo {
 	u_int8_t invert;
 	char name[XT_COOVA_NAME_LEN];
 	u_int8_t side;
+	u_int8_t check;
 };
 
 #endif /* _LINUX_NETFILTER_XT_COOVA_H */
