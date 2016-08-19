@@ -9,6 +9,8 @@ run_down() {
 	# remove chilli specific firewall rules
 	rm -f @VARRUN@/chilli.$TUNTAP-*.sh
 	/etc/init.d/firewall restart
+	ipset destroy passthrough
+	ipset destroy authenticated
 }
 
 run_down
