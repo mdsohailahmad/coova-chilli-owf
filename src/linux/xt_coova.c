@@ -257,8 +257,6 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	e = coova_entry_lookup(t, &addr, par->match->family);
 
 	if (e == NULL) {
-		if (info->check)
-			goto out;
 		e = coova_entry_init(t, &addr, par->match->family);
 		if (e == NULL)
 			goto out;
@@ -267,7 +265,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	if (hwaddr)
 		memcpy(e->hwaddr, hwaddr, ETH_ALEN);
 
-	if (e->state) {
+	if (e->state && !info->check) {
 		if (info->side == XT_COOVA_DEST) {
 			e->bytes_out += (uint64_t) p_bytes;
 			e->pkts_out ++;
