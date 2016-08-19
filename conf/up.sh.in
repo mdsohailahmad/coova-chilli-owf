@@ -28,8 +28,10 @@ run_up() {
 			ifconfig $DHCPIF $ADDR netmask $MASK
 			ifconfig $TUNTAP 0.0.0.0 down
 			ifconfig $DHCPIF -promisc
-			ipset create passthrough hash:ip
-			ipset create authenticated hash:ip
+			ipset -q create passthrough hash:ip
+			ipset -q create authenticated hash:ip
+			ipset -q flush passthrough
+			ipset -q flush authenticated
 
 			ipt -A FORWARD -t mangle -i $DHCPIF -m comment --comment "'Mark packets LAN->WAN with src address for tc filter'" -j IPMARK --addr=src
 			ipt -A FORWARD -t mangle -o $DHCPIF -m comment --comment "'Mark packets WAN->LAN with dst address for tc filter'" -j IPMARK --addr=dst
