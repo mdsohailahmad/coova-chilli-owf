@@ -10,7 +10,6 @@ run_down() {
 	rm -f @VARRUN@/chilli.$TUNTAP-*.sh
 	/etc/init.d/firewall restart
 	ipset -q destroy passthrough
-	ipset -q destroy authenticated
 	ifconfig $DHCPIF 0.0.0.0
 }
 
