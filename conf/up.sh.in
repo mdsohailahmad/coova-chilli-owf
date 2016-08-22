@@ -17,6 +17,7 @@ ipt_in() {
 run_up() {
 	if [[ -n $TUNTAP ]]
 	then
+		rm -f @VARRUN@/chilli.${TUNTAP}-do.sh @VARRUN@/chilli.${TUNTAP}-undo.sh
 		if [[ -n $KNAME ]]
 		then
 			ifconfig $DHCPIF $ADDR netmask $MASK

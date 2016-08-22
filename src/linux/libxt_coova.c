@@ -23,7 +23,7 @@ static void coova_help(void)
 	printf(
 "coova match options:\n"
 "    --name name                 Name of the table to be used. 'chilli' used if none given.\n"
-"    --src                       Indicates the src direction (lookup by src MAC/IP)\n"
+"    --src                       Indicates the source direction (lookup by source MAC/IP)\n"
 "    --dest                      Indicates the reply (lookup by dest address).\n"
 "    --checkclient               Matches rule based on authentication state\n"
 "xt_coova by: David Bird (Coova Technologies) <support@coova.com>.  http://coova.github.io/CoovaChilli\n");
@@ -79,14 +79,14 @@ static void coova_print(const void *ip, const struct xt_entry_match *match,
 {
 	const struct xt_coova_mtinfo *info = (const void *)match->data;
 	if (info->invert)
-		fputc('!', stdout);
+		printf(" ! ");
 	printf("coova: ");
 	if(info->name) 
 		printf("name: %s ",info->name);
 	if (info->side == XT_COOVA_SOURCE)
-		printf("side: src ");
+		printf("side: source ");
 	if (info->side == XT_COOVA_DEST)
-		printf("side: dest ");
+		printf("side: destination ");
 	if (info->check)
 		printf("checkclient ");
 }
@@ -95,7 +95,7 @@ static void coova_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_coova_mtinfo *info = (const void *)match->data;
 	if (info->invert) 
-		printf("! ");
+		printf(" ! ");
 	if(info->name) 
 		printf("--name %s ",info->name);
 	if (info->side == XT_COOVA_SOURCE)
