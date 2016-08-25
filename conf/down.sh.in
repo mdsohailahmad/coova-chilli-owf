@@ -8,9 +8,12 @@ run_down() {
 
 	# remove chilli specific firewall rules
 	rm -f @VARRUN@/chilli.$TUNTAP-*.sh
+
 	/etc/init.d/firewall restart
-	ipset -q destroy passthrough
-	ifconfig $DHCPIF 0.0.0.0
+	if [[ -n $KNAME ]]; then
+		ipset -q destroy passthrough
+		ifconfig $DHCPIF 0.0.0.0
+	fi
 }
 
 run_down
