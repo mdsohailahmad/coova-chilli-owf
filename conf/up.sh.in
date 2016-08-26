@@ -10,10 +10,6 @@ ipt() {
 	echo "iptables -w -D $*" >> @VARRUN@/chilli.${TUNTAP}-undo.sh
 }
 
-ipt_in() {
-	ipt -A input_rule -i $TUNTAP $*
-}
-
 run_up() {
 	if [[ -n $TUNTAP ]]
 	then
@@ -51,35 +47,6 @@ run_up() {
 				tc qdisc add dev $TUNTAP parent root sfq perturb 10 headdrop
 			fi
 
-			if [[ $LAYER3 == 0 ]]; then
-				[[ -n $UAMPORT ]] && [[ $UAMPORT != 0 ]] && \
-					ipt_in -p tcp --dport $UAMPORT -d $ADDR -j ACCEPT
-				[[ -n $UAMUIPORT ]] && [[ $UAMUIPORT != 0 ]] && \
-					ipt_in -p tcp --dport $UAMUIPORT -d $ADDR -j ACCEPT
-
-				if [[ -n $HS_TCP_PORTS ]]; then
-					for port in $HS_TCP_PORTS; do
-						ipt_in -p tcp --dport $port -d $ADDR -j ACCEPT
-					done
-				fi
-
-				if [[ -n $HS_UDP_PORTS ]]; then
-					for port in $HS_UDP_PORTS; do
-						ipt_in -p udp -p udp --dport $port --dst $ADDR -j ACCEPT
-					done
-				fi
-
-				ipt_in -p udp -d 255.255.255.255 --destination-port 67:68 -j ACCEPT
-				ipt_in -p udp -d $ADDR --destination-port 67:68 -j ACCEPT
-				ipt_in -p udp --dst $ADDR --dport 53 -j ACCEPT
-				ipt_in -p icmp --dst $ADDR -j ACCEPT
-				ipt_in -d $ADDR -j DROP
-
-				if [[ $ONLY8021Q != 1 ]]; then
-					ipt -A input_rule -i $DHCPIF -j DROP
-				fi
-			fi
-
 			if [[ $ONLY8021Q != 1 ]]; then
 				ipt -A forwarding_rule -i $DHCPIF -j DROP
 				ipt -A forwarding_rule -o $DHCPIF -j DROP
@@ -92,12 +59,6 @@ run_up() {
 			# (stops masquerading from working)
 			ipt -I PREROUTING -t raw -j NOTRACK -i $DHCPIF
 			ipt -I OUTPUT -t raw -j NOTRACK -o $DHCPIF
-
-			for wan_if in $HS_WANIF; do
-				[[ $HS_LAN_ACCESS =~ on|allow ]] || \
-					ipt -I FORWARD -i $TUNTAP \! -o $wan_if -j DROP
-				ipt -I FORWARD -i $TUNTAP -o $wan_if -j ACCEPT
-			done
 		fi
 
 		if [[ $HS_LOCAL_DNS == on ]]; then
