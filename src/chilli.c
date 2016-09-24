@@ -7434,7 +7434,7 @@ int chilli_main(int argc, char **argv) {
                  _options.dhcpif,
                  _options.dhcpusemac,
                  _options.dhcpmac, 1,
-                 &_options.dhcplisten, _options.lease, 1,
+                 &_options.dhcplisten, _options.lease, _options.kname ? 0 : 1,
                  &_options.uamlisten, _options.uamport,
                  _options.noc2c)) {
       syslog(LOG_ERR, "Failed to create dhcp listener on %s", _options.dhcpif);
