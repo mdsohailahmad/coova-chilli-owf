@@ -132,7 +132,7 @@ kmod_coova_sync() {
         }
       } else {
 #endif
-        if (!dhcp_hashget(dhcp, &conn, mac)) {
+        if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
           if (appconn) {
             if (_options.swapoctets) {

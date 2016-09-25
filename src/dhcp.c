@@ -5279,6 +5279,14 @@ int dhcp_decaps_cb(void *pctx, struct pkt_buffer *pb) {
   }
 #endif
 
+#ifdef HAVE_NETFILTER_COOVA
+  if(_options.kname && _options.bridgemode) {
+	  ignore = 1;
+	  if(_options.debug)
+		  syslog(LOG_DEBUG, "dhcp_decaps_cb: ignoring packet because bridgemode is enabled");
+  }
+#endif
+
 #ifdef ENABLE_CLUSTER
   ignore = dhcp_ignore(prot, packet, length);
 #endif
