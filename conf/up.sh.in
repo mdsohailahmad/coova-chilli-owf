@@ -22,12 +22,12 @@ run_up() {
 			ipset -q create passthrough hash:ip
 			ipset -q flush passthrough
 
-			ipt -A forwarding_lan_rule -t mangle -m comment --comment "'Mark packets LAN->WAN with src address for tc filter'" -j IPMARK --addr=src
-			ipt -A forwarding_wan_rule -t mangle -m comment --comment "'Mark packets WAN->LAN with dst address for tc filter'" -j IPMARK --addr=dst
-			ipt -A forwarding_lan_rule -m set --match-set passthrough dst -m comment --comment "'Allow LAN->passthrough'" -j ACCEPT
-			ipt -A forwarding_wan_rule -m set --match-set passthrough src -m comment --comment "'Allow passthrough->LAN'" -j ACCEPT
-			ipt -A forwarding_lan_rule -m coova -m comment --comment "'Allow authenticated clients LAN->WAN'" -j ACCEPT
-			ipt -A forwarding_wan_rule -m coova --dest -m comment --comment "'Allow authenticated clients WAN->LAN'" -j ACCEPT
+			ipt -A forwarding_from_lan -t mangle -m comment --comment "'Mark packets LAN->WAN with src address for tc filter'" -j IPMARK --addr=src
+			ipt -A forwarding_to_lan -t mangle -m comment --comment "'Mark packets WAN->LAN with dst address for tc filter'" -j IPMARK --addr=dst
+			ipt -A forwarding_from_lan -m set --match-set passthrough dst -m comment --comment "'Allow LAN->passthrough'" -j ACCEPT
+			ipt -A forwarding_to_lan -m set --match-set passthrough src -m comment --comment "'Allow passthrough->LAN'" -j ACCEPT
+			ipt -A forwarding_from_lan -m coova -m comment --comment "'Allow authenticated clients LAN->WAN'" -j ACCEPT
+			ipt -A forwarding_to_lan -m coova --dest -m comment --comment "'Allow authenticated clients WAN->LAN'" -j ACCEPT
 			ipt -A prerouting_lan_rule -t nat -p tcp --dport 80 -m set ! --match-set passthrough dst -m coova ! --checkclient \
 				-m comment --comment "'Redirect port 80 for non-passthrough, non-authenticated to UAM'" -j REDIRECT --to-ports $UAMPORT
 
