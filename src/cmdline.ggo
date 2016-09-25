@@ -294,3 +294,4 @@ option "ipv6" - "Enable IPv6 support" flag off
 option "ipv6mode" - "IPv6 mode is either 6and4 (default), 4to6, or 6to4" string no
 option "ipv6only" - "Enable IPv6-Only" flag off
 
+option "bridgemode" - "Bridge Mode, do not create clients from DHCP request" flag off

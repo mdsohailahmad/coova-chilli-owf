@@ -1251,6 +1251,7 @@ int main(int argc, char **argv) {
 
 #ifdef HAVE_NETFILTER_COOVA
   _options.kname = STRDUP(args_info.kname_arg);
+  _options.bridgemode = args_info.bridgemode_flag;
 #endif
 
 #ifdef ENABLE_DNSLOG
