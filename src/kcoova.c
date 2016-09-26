@@ -132,8 +132,21 @@ kmod_coova_sync() {
         }
       } else {
 #endif
-        if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
+        if (!dhcp_getconn(dhcp, &conn, mac, NULL, _options.bridgemode)) {
           struct app_conn_t *appconn = conn->peer;
+		  if(_options.bridgemode && !appconn->uplink && dhcp->cb_request) {
+			  struct in_addr in_ip;
+			  if (!inet_aton(ip, &in_ip)) {
+				  syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
+				  return -1;
+			  }
+			  if(_options.debug)
+				  syslog(LOG_DEBUG, "Called cb_request for %s\n", ip);
+			  if(!dhcp->cb_request(conn, in_ip, NULL, 0)) {
+				  if(_options.debug)
+					  syslog(LOG_DEUBG, "cb_request returned error for %s\n", ip);
+			  }
+		  }
           if (appconn) {
             if (_options.swapoctets) {
               appconn->s_state.input_octets = bin;

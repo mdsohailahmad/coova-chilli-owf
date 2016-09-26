@@ -382,6 +382,10 @@ int dhcp_garden_check_auth(struct dhcp_t *this,
 			   struct dhcp_conn_t *conn,
 			   struct app_conn_t *appconn,
 			   struct pkt_ipphdr_t *ipph, int dst);
+int dhcp_getconn(struct dhcp_t *this,
+		 struct dhcp_conn_t **conn,
+		 uint8_t *mac, uint8_t *pkt,
+		 char do_alloc);
 
 #define CHILLI_DHCP_OFFER    1
 #define CHILLI_DHCP_ACK      2
