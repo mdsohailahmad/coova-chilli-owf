@@ -132,8 +132,18 @@ kmod_coova_sync() {
         }
       } else {
 #endif
-        if (!dhcp_getconn(dhcp, &conn, mac, NULL, _options.bridgemode)) {
+		/* 
+		 * Changes by nilesh
+		 * For bridge mode
+		 * dhcp_getconn will allocate a new dhcp connection if bridge mode is enabled
+		 */
+        if (mac > 0 && !dhcp_getconn(dhcp, &conn, mac, NULL, _options.bridgemode)) {
           struct app_conn_t *appconn = conn->peer;
+		  /*
+		   * Call dhcp->cb_request to allocate ip address 
+		   * in case of bridge mode & do the 
+		   * mac auth stuff
+		   */
 		  if(_options.bridgemode && !appconn->uplink && dhcp->cb_request) {
 			  struct in_addr in_ip;
 			  if (!inet_aton(ip, &in_ip)) {
@@ -142,9 +152,9 @@ kmod_coova_sync() {
 			  }
 			  if(_options.debug)
 				  syslog(LOG_DEBUG, "Called cb_request for %s\n", ip);
-			  if(!dhcp->cb_request(conn, in_ip, NULL, 0)) {
+			  if(!dhcp->cb_request(conn, &in_ip, NULL, 0)) {
 				  if(_options.debug)
-					  syslog(LOG_DEUBG, "cb_request returned error for %s\n", ip);
+					  syslog(LOG_DEBUG, "cb_request returned error for %s\n", ip);
 			  }
 		  }
           if (appconn) {
