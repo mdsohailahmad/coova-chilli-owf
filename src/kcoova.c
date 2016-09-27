@@ -137,7 +137,8 @@ kmod_coova_sync() {
 		 * For bridge mode
 		 * dhcp_getconn will allocate a new dhcp connection if bridge mode is enabled
 		 */
-        if (mac > 0 && !dhcp_getconn(dhcp, &conn, mac, NULL, _options.bridgemode)) {
+
+        if (!dhcp_getconn(dhcp, &conn, mac, NULL, _options.bridgemode)) {
           struct app_conn_t *appconn = conn->peer;
 		  /*
 		   * Call dhcp->cb_request to allocate ip address 
@@ -145,17 +146,11 @@ kmod_coova_sync() {
 		   * mac auth stuff
 		   */
 		  if(_options.bridgemode && !appconn->uplink && dhcp->cb_request) {
-			  struct in_addr in_ip;
-			  if (!inet_aton(ip, &in_ip)) {
-				  syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
-				  continue;
-			  }
-			  uint32_t ip_hostbyte_order = ntohl(in_ip.s_addr);
-			  uint8_t firstoctet = (ip_hostbyte_order >> 8*3) & 0xff;
-			  if(ip_hostbyte_order == 0 || firstoctet == 127 || firstoctet >= 224)
-				  continue;
-			  if(_options.debug)
-				  syslog(LOG_DEBUG, "Called cb_request for %s\n", ip);
+			 struct in_addr in_ip;
+			 if (!inet_aton(ip, &in_ip)) {
+				 syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
+				 continue;
+			 }
 			  if(!dhcp->cb_request(conn, &in_ip, NULL, 0)) {
 				  if(_options.debug)
 					  syslog(LOG_DEBUG, "cb_request returned error for %s\n", ip);

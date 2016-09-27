@@ -257,6 +257,12 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	e = coova_entry_lookup(t, &addr, par->match->family);
 
 	if (e == NULL) {
+		if(par->match->family == AF_INET) {
+			u32 ip_hostorder = be32_to_cpu(addr.ip);
+			u8 firstoctet = (ip_hostorder >> 8*3) & 0xff;
+			if(firstoctet == 0 || firstoctet == 127 || firstoctet >= 224)
+				goto out;
+		}
 		e = coova_entry_init(t, &addr, par->match->family);
 		if (e == NULL)
 			goto out;
