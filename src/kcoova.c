@@ -148,8 +148,12 @@ kmod_coova_sync() {
 			  struct in_addr in_ip;
 			  if (!inet_aton(ip, &in_ip)) {
 				  syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
-				  return -1;
+				  continue;
 			  }
+			  uint32_t ip_hostbyte_order = ntohl(in_ip.s_addr);
+			  uint8_t firstoctet = (ip_hostbyte_order >> 8*3) & 0xff;
+			  if(ip_hostbyte_order == 0 || firstoctet == 127 || firstoctet >= 224)
+				  continue;
 			  if(_options.debug)
 				  syslog(LOG_DEBUG, "Called cb_request for %s\n", ip);
 			  if(!dhcp->cb_request(conn, &in_ip, NULL, 0)) {
