@@ -12,7 +12,7 @@ run_down() {
 	/etc/init.d/firewall restart
 	if [[ -n $KNAME ]]; then
 		ipset -q destroy passthrough
-		ifconfig $DHCPIF 0.0.0.0
+		[[ -z $BRIDGEMODE ]] && ifconfig $DHCPIF 0.0.0.0
 	fi
 }
 

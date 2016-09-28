@@ -1034,6 +1034,10 @@ int dhcp_new(struct dhcp_t **pdhcp, int numconn, int hashsize,
     return -1;
   }
 
+#ifdef HAVE_NETFILTER_COOVA
+  if(!_options.kname && !_options.bridgemode) {
+#endif
+
   if (net_init(&dhcp->rawif[0], interface,
 #ifdef ETH_P_ALL
 	       ETH_P_ALL,
@@ -1044,6 +1048,10 @@ int dhcp_new(struct dhcp_t **pdhcp, int numconn, int hashsize,
     free(dhcp);
     return -1;
   }
+
+#ifdef HAVE_NETFILTER_COOVA
+  }
+#endif
 
 #ifdef ENABLE_MULTILAN
   {
