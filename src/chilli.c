@@ -7611,6 +7611,10 @@ int chilli_main(int argc, char **argv) {
     if (net_select_init(&sctx))
       syslog(LOG_ERR, "%s: select init", strerror(errno));
 
+#ifdef HAVE_NETFILTER_COOVA
+	if(_options.kname) {
+#endif
+
 #ifdef ENABLE_MULTIROUTE
     tun->sctx = &sctx;
     for (i=0; i < tun->_interface_count; i++)
@@ -7623,6 +7627,10 @@ int chilli_main(int argc, char **argv) {
                    (tun)->_tuntap.fd,
                    SELECT_READ, (select_callback) tun_decaps,
                    tun, 0);
+#endif
+
+#ifdef HAVE_NETFILTER_COOVA
+	}
 #endif
 
     net_select_reg(&sctx, selfpipe_init(),
@@ -7641,13 +7649,20 @@ int chilli_main(int argc, char **argv) {
 #if defined(__linux__)
     net_select_reg(&sctx, dhcp->relayfd, SELECT_READ,
                    (select_callback)dhcp_relay_decaps, dhcp, 0);
-
-    for (i=0; i < MAX_RAWIF && dhcp->rawif[i].fd > 0; i++) {
+#ifdef HAVE_NETFILTER_COOVA
+	if(_options.kname) {
+#endif
+    
+	for (i=0; i < MAX_RAWIF && dhcp->rawif[i].fd > 0; i++) {
       net_select_reg(&sctx, dhcp->rawif[i].fd, SELECT_READ,
                      (select_callback)dhcp_decaps, dhcp, i);
 
       dhcp->rawif[i].sctx = &sctx;
     }
+
+#ifdef HAVE_NETFILTER_COOVA
+	}
+#endif
 
 #ifdef HAVE_NETFILTER_QUEUE
     if (dhcp->qif_in.fd && dhcp->qif_out.fd) {

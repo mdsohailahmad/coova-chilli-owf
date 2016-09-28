@@ -134,29 +134,27 @@ kmod_coova_sync() {
 #endif
 		/* 
 		 * Changes by nilesh
-		 * For bridge mode
-		 * dhcp_getconn will allocate a new dhcp connection if bridge mode is enabled
+		 * For bridge / kernel mode
+		 * dhcp_getconn will allocate a new dhcp connection if does not exist
 		 */
 
-        if (!dhcp_getconn(dhcp, &conn, mac, NULL, _options.bridgemode)) {
+        if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
-		  /*
-		   * Call dhcp->cb_request to allocate ip address 
-		   * in case of bridge mode & do the 
-		   * mac auth stuff
-		   */
-		  if(_options.bridgemode && !appconn->uplink && dhcp->cb_request) {
-			 struct in_addr in_ip;
-			 if (!inet_aton(ip, &in_ip)) {
-				 syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
-				 continue;
-			 }
-			  if(!dhcp->cb_request(conn, &in_ip, NULL, 0)) {
-				  if(_options.debug)
-					  syslog(LOG_DEBUG, "cb_request returned error for %s\n", ip);
-			  }
-		  }
           if (appconn) {
+			  /*
+			   * Call dhcp->cb_request to allocate ip address 
+			   * in case of bridge mode & do the 
+			   * mac auth stuff
+			   */
+			  if(!appconn->uplink && dhcp->cb_request) {
+				 struct in_addr in_ip;
+				 if (!inet_aton(ip, &in_ip)) {
+					 syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
+					 continue;
+				 }
+				 if(!dhcp->cb_request(conn, &in_ip, NULL, 0))
+					syslog(LOG_ERR, "Unable to create new client for %s\n", ip);
+			  }
             if (_options.swapoctets) {
               appconn->s_state.input_octets = bin;
               appconn->s_state.output_octets = bout;

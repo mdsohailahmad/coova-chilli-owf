@@ -296,7 +296,12 @@ int loadstatus() {
 	}
       }
     }
-
+	
+	/*
+	 * Changes by nilesh
+	 * call connection up script for every connection
+	 * when kernel mode is enabled
+	 */
     struct app_conn_t * appconn = conn->peer;
     if (appconn && _options.kname && _options.conup && !(appconn->s_params.flags & NO_SCRIPT) && appconn->s_state.authenticated) {
       if (_options.debug)

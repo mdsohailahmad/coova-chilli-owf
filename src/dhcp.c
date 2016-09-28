@@ -1035,7 +1035,7 @@ int dhcp_new(struct dhcp_t **pdhcp, int numconn, int hashsize,
   }
 
 #ifdef HAVE_NETFILTER_COOVA
-  if(!_options.kname && !_options.bridgemode) {
+  if(!_options.kname) {
 #endif
 
   if (net_init(&dhcp->rawif[0], interface,
@@ -5285,10 +5285,6 @@ int dhcp_decaps_cb(void *pctx, struct pkt_buffer *pb) {
            MAC_ARG(ethh->dst),
            prot, (int)prot, length);
   }
-#endif
-
-#ifdef HAVE_NETFILTER_COOVA
-  ignore = _options.kname && _options.bridgemode;
 #endif
 
 #ifdef ENABLE_CLUSTER
