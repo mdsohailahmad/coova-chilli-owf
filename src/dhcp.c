@@ -1423,10 +1423,19 @@ void dhcp_free(struct dhcp_t *dhcp) {
 #endif
   if (dhcp->hash)
     free(dhcp->hash);
+
+#ifdef HAVE_NETFILTER_COOVA
+  if(!_options.kname) {
+#endif
+
   if (!_options.uid)
     dev_set_flags(dhcp->rawif[0].devname,
 		  dhcp->rawif[0].devflags);
   net_close(&dhcp->rawif[0]);
+
+#ifdef HAVE_NETFILTER_COOVA
+  }
+#endif
 
   for (conn = dhcp->firstfreeconn; conn; ) {
     c = conn;
