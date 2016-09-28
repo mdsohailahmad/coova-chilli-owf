@@ -21,3 +21,8 @@ include @ETCCHILLI@/local.conf
 
 ipup=@ETCCHILLI@/up.sh
 ipdown=@ETCCHILLI@/down.sh
+
+acctupdate
+definteriminterval 600
+seskeepalive
+usestatusfile "/var/run/chilli.sessions"
