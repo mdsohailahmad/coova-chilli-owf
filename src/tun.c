@@ -1193,7 +1193,7 @@ int tun_runscript(struct tun_t *tun, char* script, int wait) {
     set_env("KNAME", VAL_STRING, _options.kname, 0);
   }
   if(_options.bridgemode)
-	  set_env("BRIDGEMODE", VAL_USHORT, 1, 0);
+	  set_env("BRIDGEMODE", VAL_STRING, "1", 0);
 #endif
 
   if (execl(
