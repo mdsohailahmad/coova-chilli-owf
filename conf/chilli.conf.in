@@ -15,8 +15,8 @@
 #  is for any other settings you might configure by hand for this particular
 #  installation. 
 
-include @ETCCHILLI@/main.conf
-include @ETCCHILLI@/hs.conf
+include /tmp/main.conf.br-lan
+include /tmp/hs.conf.br-lan
 include @ETCCHILLI@/local.conf
 
 ipup=@ETCCHILLI@/up.sh
