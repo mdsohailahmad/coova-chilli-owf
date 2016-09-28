@@ -416,7 +416,6 @@ struct options_t {
 
 #ifdef HAVE_NETFILTER_COOVA
   char *kname;
-  uint8_t bridgemode:1;
 #endif
 
 #ifdef ENABLE_MODULES

@@ -16,7 +16,6 @@ run_up() {
 		rm -f @VARRUN@/chilli.${TUNTAP}-do.sh @VARRUN@/chilli.${TUNTAP}-undo.sh
 		if [[ -n $KNAME ]]
 		then
-			ifconfig $DHCPIF $ADDR netmask $MASK
 			ifconfig $TUNTAP 0.0.0.0 down
 			ipset -q create passthrough hash:ip
 			ipset -q flush passthrough
