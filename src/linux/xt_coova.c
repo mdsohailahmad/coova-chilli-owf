@@ -43,24 +43,27 @@ MODULE_LICENSE("GPL");
 MODULE_ALIAS("ipt_coova");
 MODULE_ALIAS("ip6t_coova");
 
-static unsigned int ip_list_tot = 100;
+static unsigned int ip_list_tot = 512;
 static unsigned int ip_pkt_list_tot = 20;
-static unsigned int ip_list_hash_size = 0;
+static unsigned int ip_list_hash_size = 512;
 static unsigned int ip_list_perms = 0644;
 static unsigned int ip_list_uid = 0;
 static unsigned int ip_list_gid = 0;
+static unsigned int debug = 0;
 module_param(ip_list_tot, uint, 0400);
 module_param(ip_pkt_list_tot, uint, 0400);
 module_param(ip_list_hash_size, uint, 0400);
 module_param(ip_list_perms, uint, 0400);
 module_param(ip_list_uid, uint, 0400);
 module_param(ip_list_gid, uint, 0400);
+module_param(debug, uint, 0600);
 MODULE_PARM_DESC(ip_list_tot, "number of IPs to remember per list");
 MODULE_PARM_DESC(ip_pkt_list_tot, "number of packets per IP to remember (max. 255)");
 MODULE_PARM_DESC(ip_list_hash_size, "size of hash table used to look up IPs");
 MODULE_PARM_DESC(ip_list_perms, "permissions on /proc/net/coova/* files");
 MODULE_PARM_DESC(ip_list_uid,"owner of /proc/net/coova/* files");
 MODULE_PARM_DESC(ip_list_gid,"owning group of /proc/net/coova/* files");
+MODULE_PARM_DESC(debug, "enable debugging messages");
 
 struct coova_entry {
 	struct list_head	list;
@@ -317,13 +320,13 @@ static int coova_mt_check(const struct xt_mtchk_param *par)
 	    strnlen(info->name, XT_COOVA_NAME_LEN) == XT_COOVA_NAME_LEN)
 		return -EINVAL;
 
-	printk(KERN_INFO "xt_coova: looking for %s\n", info->name);
+	if(debug) printk(KERN_INFO "xt_coova: looking for %s\n", info->name);
 
 	mutex_lock(&coova_mutex);
 	t = coova_table_lookup(info->name);
 	if (t != NULL) {
 		t->refcnt++;
-		printk(KERN_INFO "xt_coova: found %s refcnt=%d\n", 
+		if(debug) printk(KERN_INFO "xt_coova: found %s refcnt=%d\n", 
 		       info->name, t->refcnt);
 		goto out;
 	}
@@ -360,11 +363,11 @@ static int coova_mt_check(const struct xt_mtchk_param *par)
 	spin_lock_bh(&coova_lock);
 	list_add_tail(&t->list, &tables);
 	spin_unlock_bh(&coova_lock);
-	printk(KERN_INFO "xt_coova: created %s refcnt=%d\n", 
+	if(debug) printk(KERN_INFO "xt_coova: created %s refcnt=%d\n", 
 	       t->name, t->refcnt);
 out:
 	mutex_unlock(&coova_mutex);
-	printk(KERN_INFO "xt_coova: match ret=%d\n", ret); 
+	if(debug) printk(KERN_INFO "xt_coova: match ret=%d\n", ret); 
 	return ret;
 }
 
@@ -532,7 +535,7 @@ coova_mt_proc_write(struct file *file, const char __user *input,
 		release = true;
 		break;
 	default:
-		printk(KERN_INFO KBUILD_MODNAME ": Need +ip, -ip, or /\n");
+		if(debug) printk(KERN_INFO KBUILD_MODNAME ": Need +ip, -ip, or /\n");
 		return -EINVAL;
 	}
 
@@ -547,7 +550,7 @@ coova_mt_proc_write(struct file *file, const char __user *input,
 	}
 
 	if (!succ) {
-		printk(KERN_INFO KBUILD_MODNAME ": illegal address written "
+		if(debug) printk(KERN_INFO KBUILD_MODNAME ": illegal address written "
 		       "to procfs\n");
 		return -EINVAL;
 	}
@@ -642,7 +645,7 @@ static int __init coova_mt_init(void)
 
 #ifdef CONFIG_PROC_FS
 	if (err < 0) {
-		printk(KERN_ERR "xt_coova: could not register match %d\n",err);
+		if(debug) printk(KERN_ERR "xt_coova: could not register match %d\n",err);
 		return err;
 	}
 	coova_proc_dir = proc_mkdir("coova", init_net.proc_net);
@@ -652,14 +655,14 @@ static int __init coova_mt_init(void)
 	}
 #endif
 
-	printk(KERN_INFO "xt_coova: ready\n");
+	if(debug) printk(KERN_INFO "xt_coova: ready\n");
 
 	return err;
 }
 
 static void __exit coova_mt_exit(void)
 {
-	printk(KERN_INFO "xt_coova: exit\n");
+	if(debug) printk(KERN_INFO "xt_coova: exit\n");
 
 	/* BUG_ON(!list_empty(&tables)); */
 

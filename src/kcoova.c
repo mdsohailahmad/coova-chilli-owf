@@ -148,7 +148,7 @@ kmod_coova_sync() {
 		if(i == 6)
 			continue;
 
-		if(!inet_aton(ip, in_ip) || in_ip.s_addr == _options.bcast.s_addr) // checking invalid ip / broadcast
+		if(!inet_aton(ip, &in_ip) || in_ip.s_addr == _options.bcast.s_addr) // checking invalid ip / broadcast
 			continue;
 
         if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
