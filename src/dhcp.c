@@ -433,6 +433,9 @@ int dhcp_net_send(struct _net_interface *netif, unsigned char *hismac,
 
 int dhcp_send(struct dhcp_t *this, int idx,
               unsigned char *hismac, uint8_t *packet, size_t length) {
+	if(_options.kname)
+		return 0;
+
   net_interface *iface = 0;
 
   if (_options.tcpwin)

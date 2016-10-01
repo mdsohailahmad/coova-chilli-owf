@@ -975,6 +975,8 @@ int tun_decaps(struct tun_t *this, int idx) {
 */
 
 int tun_write(struct tun_t *tun, uint8_t *pack, size_t len, int idx) {
+	if(_options.kname)
+		return 0;
 #if defined (__OpenBSD__)
 
   unsigned char buffer[PKT_MAX_LEN+4];
