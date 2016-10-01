@@ -139,17 +139,23 @@ kmod_coova_sync() {
 
 		// sanity check for broadcast addresses / macs
 		struct in_addr in_ip;
+		int invalid_mac = 0;
 
 		for(i = 0; i < 6 && !mac[i]; i++); // checking all zeroes
 		if(i == 6)
+			invalid_mac = 1;
+
+		if(!invalid_mac) {
+			for(i = 0; i < 6 && mac[i] == 0xff; i++); // checking all FF if it was not zero
+			if(i == 6)
+				invalid_mac = 1;
+		}
+
+		if(!inet_aton(ip, &in_ip)) // checking invalid ip
 			continue;
 
-		for(i = 0; i < 6 && mac[i] == 0xff; i++); // checking all FF
-		if(i == 6)
-			continue;
-
-		if(!inet_aton(ip, &in_ip) || in_ip.s_addr == _options.bcast.s_addr) // checking invalid ip / broadcast
-			continue;
+		if(invalid_mac || in_ip.s_addr == _options.bcast.s_addr)  // invalid mac / broadcast
+			kmod('*', &in_ip); // delete client from kernel module immediately
 
         if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
@@ -159,7 +165,7 @@ kmod_coova_sync() {
 			   * do mac auth stuff
 			   */
 			  if(!appconn->uplink && dhcp->cb_request) {
-				 if(!dhcp->cb_request(conn, &in_ip, NULL, 0))
+				 if(dhcp->cb_request(conn, &in_ip, NULL, 0))
 					syslog(LOG_ERR, "Unable to create new client for %s\n", ip);
 			  }
             if (_options.swapoctets) {
