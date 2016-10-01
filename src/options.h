@@ -46,6 +46,8 @@ struct options_t {
   struct in_addr mask;           /* Network mask */
   char maskc[OPT_IPADDRLEN];
 
+  struct in_addr bcast; /* Broadcast address */
+
   char * tundev;
   char * dynip;                  /* Dynamic IP address pool */
   char * statip;                 /* Static IP address pool */

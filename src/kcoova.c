@@ -134,24 +134,31 @@ kmod_coova_sync() {
 #endif
 		/* 
 		 * Changes by nilesh
-		 * For bridge / kernel mode
 		 * dhcp_getconn will allocate a new dhcp connection if does not exist
 		 */
+
+		// sanity check for broadcast addresses / macs
+		struct in_addr in_ip;
+
+		for(i = 0; i < 6 && !mac[i]; i++); // checking all zeroes
+		if(i == 6)
+			continue;
+
+		for(i = 0; i < 6 && mac[i] == 0xff; i++); // checking all FF
+		if(i == 6)
+			continue;
+
+		if(!inet_aton(ip, in_ip) || in_ip.s_addr == _options.bcast.s_addr) // checking invalid ip / broadcast
+			continue;
 
         if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
           if (appconn) {
 			  /*
 			   * Call dhcp->cb_request to allocate ip address 
-			   * in case of bridge mode & do the 
-			   * mac auth stuff
+			   * do mac auth stuff
 			   */
 			  if(!appconn->uplink && dhcp->cb_request) {
-				 struct in_addr in_ip;
-				 if (!inet_aton(ip, &in_ip)) {
-					 syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
-					 continue;
-				 }
 				 if(!dhcp->cb_request(conn, &in_ip, NULL, 0))
 					syslog(LOG_ERR, "Unable to create new client for %s\n", ip);
 			  }

@@ -7261,6 +7261,8 @@ int chilli_main(int argc, char **argv) {
   if (process_options(argc, argv, 0))
     exit(1);
 
+  _options.bcast.s_addr = _options.net.s_addr | ~_options.mask.s_addr;
+
   /* foreground                                                   */
   /* If flag not given run as a daemon                            */
   if (!_options.foreground) {

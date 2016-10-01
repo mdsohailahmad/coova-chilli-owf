@@ -231,9 +231,9 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		else
 			addr.ip = iph->saddr;
 
-		u32 ip_hostorder = be32_to_cpu(addr.ip);
-		u8 firstoctet = (ip_hostorder >> 8*3) & 0xff;
-
+		// do not match if first octet of the ip
+		// is 0 (no ip assigned), 127 (loopback), 224 (class d, e)
+		u8 firstoctet = (be32_to_cpu(addr.ip) >> 8*3) & 0xff;
 		if(firstoctet == 0 || firstoctet == 127 || firstoctet >= 224)
 			return ret;
 
