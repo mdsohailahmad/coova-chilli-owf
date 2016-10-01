@@ -154,8 +154,11 @@ kmod_coova_sync() {
 		if(!inet_aton(ip, &in_ip)) // checking invalid ip
 			continue;
 
-		if(invalid_mac || in_ip.s_addr == _options.bcast.s_addr)  // invalid mac / broadcast
+		// invalid mac / broadcast
+		if(invalid_mac || in_ip.s_addr == _options.bcast.s_addr) {
 			kmod('*', &in_ip); // delete client from kernel module immediately
+			continue;
+		}
 
         if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
