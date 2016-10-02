@@ -1,19 +1,20 @@
 #!/bin/bash
 
-TUNTAP=$(basename $DEV)
-echo $TUNTAP > @VARRUN@/chilli_tunname
 . @SYSCONFDIR@/chilli/functions
+
+TUNTAP=$(basename $DEV)
+echo $TUNTAP > $RUN_D/tunname
 
 ipt() {
 	opt=$1; shift
-	echo "iptables -w $opt $*" >> @VARRUN@/chilli.${TUNTAP}-do.sh
-	echo "iptables -w -D $*" >> @VARRUN@/chilli.${TUNTAP}-undo.sh
+	echo "iptables -w $opt $*" >> $RUN_D/$TUNTAP-do.sh
+	echo "iptables -w -D $*" >> $RUN_D/$TUNTAP-undo.sh
 }
 
 run_up() {
 	if [[ -n $TUNTAP ]]
 	then
-		rm -f @VARRUN@/chilli.${TUNTAP}-do.sh @VARRUN@/chilli.${TUNTAP}-undo.sh
+		rm -f $RUN_D/$TUNTAP-do.sh $RUN_D/$TUNTAP-undo.sh
 		if [[ -n $KNAME ]]
 		then
 			ifconfig $TUNTAP 0.0.0.0 down
@@ -26,7 +27,7 @@ run_up() {
 			ipt -A forwarding_to_lan -m set --match-set passthrough src -m comment --comment "'Allow passthrough->LAN'" -j ACCEPT
 			ipt -A forwarding_from_lan -m coova -m comment --comment "'Allow authenticated clients LAN->WAN'" -j ACCEPT
 			ipt -A forwarding_to_lan -m coova --dest -m comment --comment "'Allow authenticated clients WAN->LAN'" -j ACCEPT
-			ipt -A prerouting_lan_rule -t nat -p tcp --dport 80 -m set ! --match-set passthrough dst -m coova ! --checkclient \
+			ipt -A prerouting_from_lan -t nat -p tcp --dport 80 -m set ! --match-set passthrough dst -m coova ! --checkclient \
 				-m comment --comment "'Redirect port 80 for non-passthrough, non-authenticated to UAM'" -j REDIRECT --to-ports $UAMPORT
 
 			ipset add passthrough $ADDR
@@ -60,11 +61,11 @@ run_up() {
 		fi
 
 		if [[ $HS_LOCAL_DNS == on ]]; then
-			ipt -A prerouting_lan_rule -t nat -p udp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
-			ipt -A prerouting_lan_rule -t nat -p tcp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
+			ipt -A prerouting_from_lan -t nat -p udp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
+			ipt -A prerouting_from_lan -t nat -p tcp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
 		fi
 
-		ipt -A prerouting_lan_rule -t nat -d $ADDR -p tcp --dport 80 -m comment --comment "'Rewrite packets to self port 80 on LAN to UAM'" -j REDIRECT --to-ports $UAMPORT
+		ipt -A prerouting_from_lan -t nat -d $ADDR -p tcp --dport 80 -m comment --comment "'Rewrite packets to self port 80 on LAN to UAM'" -j REDIRECT --to-ports $UAMPORT
 		/etc/init.d/firewall restart
 	fi
 }
