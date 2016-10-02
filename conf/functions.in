@@ -9,7 +9,7 @@ IPTABLES=/sbin/iptables
 IFCONFIG=/sbin/ifconfig
 
 CHILLI=@ETCCHILLI@
-RUN_D=@VARRUN@
+RUN_D=@VARRUN@/chilli
 SBIN=@SBINDIR@
 
 [ -f /etc/sysconfig/chilli ] && . /etc/sysconfig/chilli
@@ -24,14 +24,14 @@ SBIN=@SBINDIR@
     [ -f $CHILLI/config ] && . $CHILLI/config
 }
 
-MAIN_CONF=$CHILLI/main.conf
-LOCAL_CONF=$CHILLI/local.conf
-HS_CONF=$CHILLI/hs.conf
-HS_TEMP=/tmp/hs.conf.$HS_LANIF
-MAIN_TEMP=/tmp/main.conf.$HS_LANIF
-CMDSOCK=$RUN_D/chilli.$HS_LANIF.sock
-PIDFILE=$RUN_D/chilli.$HS_LANIF.pid
-IPCFILE=chilli.$HS_LANIF.ipc
+mkdir -p $RUN_D
+
+MAIN_CONF=$RUN_D/main.conf
+LOCAL_CONF=$RUN_D/local.conf
+HS_CONF=$RUN_D/hs.conf
+CMDSOCK=$RUN_D/chilli.sock
+PIDFILE=$RUN_D/chilli.pid
+IPCFILE=ipc.sock
 
 HS_UAMPORT=${HS_UAMPORT:-3990}
 HS_RADIUS=${HS_RADIUS:-$HS_UAMSERVER}
@@ -223,7 +223,7 @@ writeconfig() {
     # Application walled garden entries:
     [ "$HS_USE_MAP" = "on" ] && addconfig1 "uamdomain .google.com"
 
-    writeconfig1 > $MAIN_TEMP
+    writeconfig1 > $MAIN_CONF
 
     # Not using auto-config, so set hs.conf settings directly
     if [ "$HS_RADCONF" != "on" -a "$HS_RADCONF" != "url" ]; then
@@ -296,75 +296,11 @@ writeconfig() {
 	# to manage settings and ensure they are not repeated
 
 	if [ "$HS_CONF_INONE" = "1" ]; then
-	    writeconfig2 >> $MAIN_TEMP
+	    writeconfig2 >> $MAIN_CONF
 	else
-	    writeconfig2 > $HS_TEMP
+	    writeconfig2 > $HS_CONF
 	fi
     fi
 
-    touch $MAIN_TEMP $HS_TEMP
-    update_new_file $MAIN_TEMP $MAIN_CONF
-    update_new_file $HS_TEMP $HS_CONF
     rm -f $configs1 $configs2
 }
-
-files_equal() {    # returns 0 for equal, 1 for not-equal
-    [ -x /usr/bin/cmp ] || [ -x /bin/cmp ] && {
-	cmp -s $1 $2 && return 0;
-	return 1;
-    }
-    [ -x /usr/bin/md5sum ] || [ -x /bin/md5sum ] && {
-	[ "$(md5sum $1 | cut -f1 -d' ')" = "$(md5sum $2 | cut -f1 -d' ')" ] && return 0;
-	return 1;
-    }
-    return 0;
-}
-
-update_new_file() {
-    files_equal $1 $2 || {
-	cp -f $1 $2
-	return 0;
-    }
-    return 1;
-}
-
-checkfornew() {
-    update_new_file $HS_TEMP $HS_CONF && {
-	killall -HUP chilli 2>/dev/null >/dev/null
-    }
-}
-
-radiusconfig() {
-    [ -e $LOCAL_CONF ] || touch $LOCAL_CONF
-    [ -e $HS_CONF ] || touch $HS_CONF
-    if [ "$HS_RADCONF" = "url" ]; then
-	for s in $HS_RADCONF_URL $HS_RADCONF_URLS; do
-	    sep='?'
-	    opt=
-	    qs="config=chilli&mac=$HS_NASMAC&nasid=$HS_NASID&nasip=$HS_NASIP&ssid=$HS_SSID"
-	    [ "$s" = "$(echo $s|awk -F'?' '{ print $1 }')" ] || sep='&'
-	    [ "$HS_RADCONF_USER" = "" ] || opt="-u '$HS_RADCONF_USER:$HS_RADCONF_PWD'"
-	    curl -k -A CoovaAP $opt "$s$sep$qs" 2>/dev/null > $HS_TEMP && break;
-	done
-    elif [ "$HS_RADCONF" = "on" ]; then
-	for s in $HS_RADCONF_SERVER $HS_RADCONF_SERVERS; do
-	    $SBIN/chilli_radconfig \
-		--radiustimeout=30 \
-		--radiusretry=3 \
-		--radiusretrysec=3 \
-		--radiusserver1="$s" \
-		--radiussecret="$HS_RADCONF_SECRET" \
-		--radiusauthport="$HS_RADCONF_AUTHPORT" \
-		--radiusacctport="$HS_RADCONF_ACCTPORT" \
-		--nasip="$HS_NASIP" \
-		--nasmac="$HS_NASMAC" \
-		--adminuser="$HS_RADCONF_USER" \
-		--adminpasswd="$HS_RADCONF_PWD" \
-		> $HS_TEMP && break;
-	done
-#    elif [ "$HS_LOCAL" != "on" ]; then
-#	$SBIN/chilli_radconfig > $HS_TEMP && { checkfornew; break; }
-    fi
-    checkfornew
-}
-
