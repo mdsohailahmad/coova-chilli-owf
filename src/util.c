@@ -21,7 +21,14 @@
 #include "chilli.h"
 
 int statedir_file(char *dst, int dlen, char *file, char *deffile) {
-  char *statedir = _options.statedir ? _options.statedir : DEFSTATEDIR;
+  char *statedir = _options.statedir ? _options.statedir : DEFSTATEDIR "/chilli";
+  DIR *_statedir = opendir(statedir);
+
+  if(_statedir)
+	  closedir(_statedir);
+  else if(errno == ENOENT)
+	  mkdir(statedir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
   if (!file && deffile) {
     snprintf(dst, dlen, "%s/%s", statedir, deffile);
   } else if (file) {
