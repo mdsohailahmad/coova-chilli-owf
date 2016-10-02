@@ -403,11 +403,11 @@ int main(int argc, char **argv) {
    */
 
 #ifdef HAVE_GLOB
-  char *cmdsock = DEFSTATEDIR"/chilli*.sock";
+  char *cmdsock = DEFSTATEDIR"/chilli/chilli*.sock";
   glob_t globbuf;
   int i;
 #else
-  char *cmdsock = DEFSTATEDIR"/chilli.sock";
+  char *cmdsock = DEFSTATEDIR"/chilli/chilli.sock";
 #endif
   int s;
   int cmdsockport = 0;
