@@ -427,7 +427,9 @@ int chilli_binconfig(char *file, size_t flen, pid_t pid) {
 	pid = getpid();
     }
   }
-  snprintf(file, flen, DEFSTATEDIR "/chilli.%d.cfg.bin", pid);
+  char binfilename[128];
+  snprintf(binfilename, sizeof(binfilename), "%d.cfg.bin", pid);
+  statedir_file(file, flen, NULL, binfilename);
   return 0;
 }
 
