@@ -63,6 +63,11 @@ run_up() {
 		if [[ $HS_LOCAL_DNS == on ]]; then
 			ipt -A prerouting_from_lan -t nat -p udp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
 			ipt -A prerouting_from_lan -t nat -p tcp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
+		else
+			ipt -A forwarding_from_lan -p udp --dport 53 -j ACCEPT
+			ipt -A forwarding_to_lan -p udp --sport 53 -j ACCEPT
+			ipt -A forwarding_from_lan -p tcp --dport 53 -j ACCEPT
+			ipt -A forwarding_to_lan -p tcp --sport 53 -j ACCEPT
 		fi
 
 		ipt -A prerouting_from_lan -t nat -d $ADDR -p tcp --dport 80 -m comment --comment "'Rewrite packets to self port 80 on LAN to UAM'" -j REDIRECT --to-ports $UAMPORT
