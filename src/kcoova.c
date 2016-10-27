@@ -168,8 +168,12 @@ kmod_coova_sync() {
 			   * do mac auth stuff
 			   */
 			  if(!appconn->uplink && dhcp->cb_request) {
-				 if(dhcp->cb_request(conn, &in_ip, NULL, 0))
+				 if(dhcp->cb_request(conn, &in_ip, NULL, 0)) {
 					syslog(LOG_ERR, "Unable to create new client for %s\n", ip);
+					// try to kick the client out of kernel module
+					// will appear again anyway if it is really present
+					kmod('*', &in_ip);
+				}
 			  }
             if (_options.swapoctets) {
               appconn->s_state.input_octets = bin;
