@@ -564,7 +564,7 @@ static void bstring_buildurl(bstring str, struct redir_conn_t *conn,
     redir_urlencode(bt, bt2);
 
     if (_options.debug)
-      syslog(LOG_DEBUG, "found %.*s",
+      syslog(LOG_DEBUG, "%s(%d): found %.*s", __FUNCTION__, __LINE__,
              bt->slen, bt->data);
 
     bconcat(str, bt2);
@@ -779,7 +779,7 @@ void redir_wispr1_reply (struct redir_t *redir, struct redir_conn_t *conn,
   bstring bt = bfromcstr("");;
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "%s", __FUNCTION__);
+    syslog(LOG_DEBUG, "%s(%d):", __FUNCTION__, __LINE__);
 
   bcatcstr(b,
 	   "<!--\r\n"
@@ -990,7 +990,7 @@ void redir_wispr2_reply (struct redir_t *redir, struct redir_conn_t *conn,
   char eap64str [MAX_EAP_LEN*2];
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "%s", __FUNCTION__);
+    syslog(LOG_DEBUG, "%s(%d):", __FUNCTION__, __LINE__);
 
   bcatcstr(b,
 	   "<!--\r\n"
@@ -1057,7 +1057,7 @@ void redir_wispr2_reply (struct redir_t *redir, struct redir_conn_t *conn,
         bconcat(b, bt);
       } else {
         if (_options.debug)
-          syslog(LOG_DEBUG, "Base64 encoding of eap identity request failed");
+          syslog(LOG_DEBUG, "%s(%d): Base64 encoding of eap identity request failed", __FUNCTION__, __LINE__);
       }
       bcatcstr(b, "</Redirect>\r\n");
       break;
@@ -1162,7 +1162,7 @@ void redir_wispr2_reply (struct redir_t *redir, struct redir_conn_t *conn,
         bconcat(b, bt);
       } else {
         if (_options.debug)
-          syslog(LOG_DEBUG, "Base64 encoding of radius eap message failed");
+          syslog(LOG_DEBUG, "%s(%d): Base64 encoding of radius eap message failed", __FUNCTION__, __LINE__);
       }
 
       bassignformat(bt, "<LoginURL>%s%sres=wispr&amp;uamip=%s&amp;continue=1&amp;uamport=%d&amp;challenge=%s</LoginURL>\r\n",
@@ -1184,12 +1184,12 @@ void redir_wispr2_reply (struct redir_t *redir, struct redir_conn_t *conn,
         if (!base64encoder(&(conn->authdata.v.eapmsg),
                            eap64str, MAX_EAP_LEN*2)){
           if (_options.debug)
-            syslog(LOG_DEBUG, "Encoded radius eap msg: %s", eap64str);
+            syslog(LOG_DEBUG, "%s(%d): Encoded radius eap msg: %s", __FUNCTION__, __LINE__, eap64str);
           bassignformat(bt, "<EAPMsg>%s</EAPMsg>\r\n", eap64str);
           bconcat(b, bt);
         } else {
           if (_options.debug)
-            syslog(LOG_DEBUG, "Base64 encoding of radius eap message failed");
+            syslog(LOG_DEBUG, "%s(%d): Base64 encoding of radius eap message failed", __FUNCTION__, __LINE__);
         }
       }
 
@@ -1411,7 +1411,7 @@ static int redir_json_reply(struct redir_t *redir, int res, struct redir_conn_t 
 
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "sending json: %s\n", json->data);
+    syslog(LOG_DEBUG, "%s(%d): sending json: %s\n", __FUNCTION__, __LINE__, json->data);
 #endif
 
   bdestroy(json);
@@ -1473,7 +1473,7 @@ redir_write(struct redir_socket_t *sock, char *buf, size_t len) {
 
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "redir_write(%zd)",len);
+    syslog(LOG_DEBUG, "%s(%d): redir_write(%zd)", __FUNCTION__, __LINE__, len);
 #endif
 
   while (r < len) {
@@ -1733,14 +1733,14 @@ int redir_listen(struct redir_t *redir) {
       syslog(LOG_ERR, "%s: setsockopt(SO_REUSEPORT)", strerror(errno));
       if (errno != ENOPROTOOPT) {
         if (_options.debug)
-          syslog(LOG_DEBUG, "setsockopt(SO_REUSEPORT) failed hard, aborting.");
+          syslog(LOG_DEBUG, "%s(%d): setsockopt(SO_REUSEPORT) failed hard, aborting.", __FUNCTION__, __LINE__);
 	safe_close(redir->fd[n]);
 	redir->fd[n]=0;
 	return -1;
       } else {
         if (_options.debug)
-          syslog(LOG_DEBUG, "setsockopt(SO_REUSEPORT) failed due to proto not available "
-                 "(probably compiled with newer header files), continueing anyways...");
+          syslog(LOG_DEBUG, "%s(%d): setsockopt(SO_REUSEPORT) failed due to proto not available "
+                 "(probably compiled with newer header files), continueing anyways...", __FUNCTION__, __LINE__);
       }
     }
 #endif
@@ -1911,7 +1911,7 @@ int redir_getparam(struct redir_t *redir, char *src, char *param, bstring dst) {
 
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "getparam(%s)", sstr);
+    syslog(LOG_DEBUG, "%s(%d): getparam(%s)", __FUNCTION__, __LINE__, sstr);
 #endif
 
   len = strlen(sstr);
@@ -1937,7 +1937,7 @@ int redir_getparam(struct redir_t *redir, char *src, char *param, bstring dst) {
     bassigncstr(dst, "");
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "The parameter %s is: [%.*s]", param, dst->slen, dst->data);/**/
+    syslog(LOG_DEBUG, "%s(%d): The parameter %s is: [%.*s]", __FUNCTION__, __LINE__, param, dst->slen, dst->data);
 
   return 0;
 }
@@ -2047,13 +2047,13 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	if (errno == EWOULDBLOCK && !forked) {
 #if(_debug_ > 1)
           if (_options.debug)
-            syslog(LOG_DEBUG, "Continue... (would block)");
+            syslog(LOG_DEBUG, "%s(%d): Continue... (would block)", __FUNCTION__, __LINE__);
 #endif
 	  wblock = 1;
 	} else {
 #if(_debug_ > 1)
           if (_options.debug)
-            syslog(LOG_DEBUG, "%s_read(%d) failed!",
+            syslog(LOG_DEBUG, "%s(%d): %s_read(%d) failed!", __FUNCTION__, __LINE__,
 #ifdef HAVE_SSL
                    sock->sslcon ? "SSL" :
 #endif
@@ -2096,7 +2096,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 
     if (buflen == 0) {
       if (_options.debug)
-        syslog(LOG_DEBUG, "No data in HTTP request!");
+        syslog(LOG_DEBUG, "%s(%d): No data in HTTP request!", __FUNCTION__, __LINE__);
       if (!forked && wblock) return 1;
       return -1;
     }
@@ -2117,18 +2117,20 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	  httpreq->is_post = 1;
 	} else {
           if (_options.debug)
-            syslog(LOG_DEBUG, "Unhandled http request: %s %d", p1,
+            syslog(LOG_DEBUG, "%s(%d): Unhandled http request: %s %d", __FUNCTION__, __LINE__, p1,
                    _options.uamallowpost);
 	  return -1;
 	}
 
 	while (*p1 == ' ') p1++; /* Advance through additional white space */
 
+	/* A proxy request, skip over the initial URL */
 	if (!strncmp(p1, "http://", 7) && strlen(p1) > 8) {
-	  /*
-	   *   A proxy request, skip over the initial URL
-	   */
 	  p1 += 7;
+	  while (*p1 && *p1 != '/') p1++;
+	}
+	else if (!strncmp(p1, "https://", 8) && strlen(p1) > 9) {
+	  p1 += 8;
 	  while (*p1 && *p1 != '/') p1++;
 	}
 
@@ -2144,7 +2146,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	strlcpy(path, p1, sizeof(httpreq->path));
 
         if (_options.debug)
-          syslog(LOG_DEBUG, "The path: %s", path);
+          syslog(LOG_DEBUG, "%s(%d): The path: %s", __FUNCTION__, __LINE__, path);
 
 	/* TODO: Should also check the Host: to make sure we are talking directly to uamlisten */
 
@@ -2160,7 +2162,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	  path[last]=0;
 
           if (_options.debug)
-            syslog(LOG_DEBUG, "The (json format) path: %s", path);
+            syslog(LOG_DEBUG, "%s(%d): The (json format) path: %s", __FUNCTION__, __LINE__, path);
 	}
 #endif
 
@@ -2200,7 +2202,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 
 #if(_debug_ > 1)
             if (_options.debug)
-              syslog(LOG_DEBUG, "Query string: %s", httpreq->qs);
+              syslog(LOG_DEBUG, "%s(%d): Query string: %s", __FUNCTION__, __LINE__, httpreq->qs);
 #endif
 	  }
 	}
@@ -2208,7 +2210,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	/* end of headers */
 #if(_debug_ > 1)
         if (_options.debug)
-          syslog(LOG_DEBUG, "end of http-request");
+          syslog(LOG_DEBUG, "%s(%d): end of http-request", __FUNCTION__, __LINE__);
 #endif
 	done = 1;
 	eoh = 1;
@@ -2224,7 +2226,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	  strlcpy(httpreq->host, p, sizeof(httpreq->host));
 #if(_debug_ > 1)
           if (_options.debug)
-            syslog(LOG_DEBUG, "Host: %s",httpreq->host);
+            syslog(LOG_DEBUG, "%s(%d): Host: %s", __FUNCTION__, __LINE__, httpreq->host);
 #endif
 	}
 	else if (!strncasecmp(buffer,"Content-Length:",15)) {
@@ -2234,7 +2236,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	  if (len > 0) httpreq->clen = atoi(p);
 #if(_debug_ > 1)
           if (_options.debug)
-            syslog(LOG_DEBUG, "Content-Length: %s",p);
+            syslog(LOG_DEBUG, "%s(%d): Content-Length: %s", __FUNCTION__, __LINE__, p);
 #endif
 	}
 #ifdef ENABLE_USERAGENT
@@ -2245,7 +2247,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
                   p, sizeof(conn->s_state.redir.useragent));
 #if(_debug_)
           if (_options.debug)
-            syslog(LOG_DEBUG, "User-Agent: %s",conn->s_state.redir.useragent);
+            syslog(LOG_DEBUG, "%s(%d): User-Agent: %s", __FUNCTION__, __LINE__, conn->s_state.redir.useragent);
 #endif
 	}
 #endif
@@ -2257,7 +2259,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
                   p, sizeof(conn->s_state.redir.acceptlanguage));
 #if(_debug_ > 1)
           if (_options.debug)
-            syslog(LOG_DEBUG, "Accept-Language: %s",conn->s_state.redir.acceptlanguage);
+            syslog(LOG_DEBUG, "%s(%d): Accept-Language: %s", __FUNCTION__, __LINE__, conn->s_state.redir.acceptlanguage);
 #endif
 	}
 #endif
@@ -2267,7 +2269,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 	  strlcpy(conn->httpcookie, p, sizeof(conn->httpcookie));
 #if(_debug_ > 1)
           if (_options.debug)
-            syslog(LOG_DEBUG, "Cookie: %s",conn->httpcookie);
+            syslog(LOG_DEBUG, "%s(%d): Cookie: %s", __FUNCTION__, __LINE__, conn->httpcookie);
 #endif
 	}
       }
@@ -2284,7 +2286,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
     if (!forked && !eoh && wblock) {
 #if(_debug_ > 1)
       if (_options.debug)
-        syslog(LOG_DEBUG, "Didn't see end of headers, continue...");
+        syslog(LOG_DEBUG, "%s(%d): Didn't see end of headers, continue...", __FUNCTION__, __LINE__);
 #endif
       /*syslog(LOG_DEBUG, "%.*s",httpreq->data_in->slen,httpreq->data_in->data);*/
       return 1;
@@ -2300,7 +2302,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
     case REDIR_EWTAPI:
 #ifdef HAVE_SSL
       if (_options.debug)
-        syslog(LOG_DEBUG, "EWT API pre-process");
+        syslog(LOG_DEBUG, "%s(%d): EWT API pre-process", __FUNCTION__, __LINE__);
       if (sock->sslcon) {
       }
 #endif
@@ -2325,7 +2327,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
                    sizeof(conn->s_state.redir.username));
 
         if (_options.debug)
-          syslog(LOG_DEBUG, "-->> Setting username=[%s]",conn->s_state.redir.username);
+          syslog(LOG_DEBUG, "%s(%d): -->> Setting username=[%s]", __FUNCTION__, __LINE__, conn->s_state.redir.username);
 
         if (!redir_getparam(redir, httpreq->qs, "userurl", bt)) {
           bstring bt2 = bfromcstr("");
@@ -2333,7 +2335,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
           bstrtocstr(bt2, conn->s_state.redir.userurl,
                      sizeof(conn->s_state.redir.userurl));
           if (_options.debug)
-            syslog(LOG_DEBUG, "-->> Setting userurl=[%s]",conn->s_state.redir.userurl);
+            syslog(LOG_DEBUG, "%s(%d): -->> Setting userurl=[%s]", __FUNCTION__, __LINE__, conn->s_state.redir.userurl);
           bdestroy(bt2);
         }
 
@@ -2349,16 +2351,16 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
           if (!strcmp(rxversion, "2.0")) {
             conn->s_state.redir.uamprotocol = REDIR_UAMPROT_WISPR2;
             if (_options.debug)
-              syslog(LOG_DEBUG, "using uamprotocol: WISPr 2.0 (%d)", conn->s_state.redir.uamprotocol);
+              syslog(LOG_DEBUG, "%s(%d): using uamprotocol: WISPr 2.0 (%d)", __FUNCTION__, __LINE__, conn->s_state.redir.uamprotocol);
           } else {
             conn->s_state.redir.uamprotocol = REDIR_UAMPROT_WISPR1;
             if (_options.debug)
-              syslog(LOG_DEBUG, "using uamprotocol: WISPr 1.0 (%d)", conn->s_state.redir.uamprotocol);
+              syslog(LOG_DEBUG, "%s(%d): using uamprotocol: WISPr 1.0 (%d)", __FUNCTION__, __LINE__, conn->s_state.redir.uamprotocol);
           }
         } else {
           conn->s_state.redir.uamprotocol = REDIR_UAMPROT_WISPR1;
           if (_options.debug)
-            syslog(LOG_DEBUG, "using uamprotocol: WISPr 1.0 (%d)", conn->s_state.redir.uamprotocol);
+            syslog(LOG_DEBUG, "%s(%d): using uamprotocol: WISPr 1.0 (%d)", __FUNCTION__, __LINE__, conn->s_state.redir.uamprotocol);
         }
 
         if (!redir_getparam(redir, httpreq->qs, "ntresponse", bt)) {
@@ -2434,7 +2436,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
                         conn->authdata.v.eapmsg.len, buffer,
                         conn->authdata.v.eapmsg.len*2+1);
               if (_options.debug)
-                syslog(LOG_DEBUG, "decoded eap message from WISPr request (%d): %s",
+                syslog(LOG_DEBUG, "%s(%d): decoded eap message from WISPr request (%d): %s", __FUNCTION__, __LINE__,
                        conn->authdata.v.eapmsg.len, buffer);
             }
 
@@ -2444,7 +2446,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 
         if (conn->authdata.type == REDIR_AUTH_NONE) {
           if (_options.debug)
-            syslog(LOG_DEBUG, "No password found!");
+            syslog(LOG_DEBUG, "%s(%d): No password found!", __FUNCTION__, __LINE__);
           bdestroy(bt);
           return -1;
         }
@@ -2462,7 +2464,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
           bstrtocstr(bt2, conn->s_state.redir.userurl,
                      sizeof(conn->s_state.redir.userurl));
           if (_options.debug)
-            syslog(LOG_DEBUG, "-->> Setting userurl=[%s]",conn->s_state.redir.userurl);
+            syslog(LOG_DEBUG, "%s(%d): -->> Setting userurl=[%s]", __FUNCTION__, __LINE__, conn->s_state.redir.userurl);
           bdestroy(bt2);
         }
         bdestroy(bt);
@@ -2476,7 +2478,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
         redir_urldecode(bt, bt2);
         bstrtocstr(bt2, conn->wwwfile, sizeof(conn->wwwfile));
         if (_options.debug)
-          syslog(LOG_DEBUG, "Serving file %s", conn->wwwfile);
+          syslog(LOG_DEBUG, "%s(%d): Serving file %s", __FUNCTION__, __LINE__, conn->wwwfile);
         bdestroy(bt2);
         bdestroy(bt);
       }
@@ -2485,7 +2487,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 #ifdef ENABLE_WPAD
     case REDIR_WPAD:
       if (_options.debug)
-        syslog(LOG_DEBUG, "WPAD %s:%d", __FUNCTION__, __LINE__);
+        syslog(LOG_DEBUG, "%s(%d): WPAD", __FUNCTION__, __LINE__);
       break;
 #endif
 
@@ -2499,7 +2501,7 @@ static int redir_getreq(struct redir_t *redir, struct redir_socket_t *sock,
 		      httpreq->qs[0] ? httpreq->qs : "");
 
         if (_options.debug)
-          syslog(LOG_DEBUG, "-->> Setting userurl=[%s]",conn->s_state.redir.userurl);
+          syslog(LOG_DEBUG, "%s(%d): -->> Setting userurl=[%s]", __FUNCTION__, __LINE__, conn->s_state.redir.userurl);
       }
       break;
 
@@ -2518,7 +2520,7 @@ static int redir_cb_radius_auth_conf(struct radius_t *radius,
   int instance = 0;
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "Received RADIUS response");
+    syslog(LOG_DEBUG, "%s(%d): Received RADIUS response", __FUNCTION__, __LINE__);
 
   if (!conn) {
     syslog(LOG_ERR, "No peer protocol defined");
@@ -2565,7 +2567,7 @@ static int redir_cb_radius_auth_conf(struct radius_t *radius,
       char buffer[conn->s_state.redir.classlen*2+1];
       bytetohex(conn->s_state.redir.classbuf,conn->s_state.redir.classlen,buffer, conn->s_state.redir.classlen*2+1);
       if (_options.debug)
-        syslog(LOG_DEBUG, "+attribute Class (%zu bytes): %s", conn->s_state.redir.classlen, buffer);
+        syslog(LOG_DEBUG, "%s(%d): +attribute Class (%zu bytes): %s", __FUNCTION__, __LINE__, conn->s_state.redir.classlen, buffer);
     }
   } else {
     conn->s_state.redir.classlen = 0;
@@ -2579,7 +2581,7 @@ static int redir_cb_radius_auth_conf(struct radius_t *radius,
       char buffer[conn->s_state.redir.cuilen*2+1];
       bytetohex(conn->s_state.redir.cuibuf,conn->s_state.redir.cuilen,buffer, conn->s_state.redir.cuilen*2+1);
       if (_options.debug)
-        syslog(LOG_DEBUG, "+attribute CUI (%zu bytes): %s", conn->s_state.redir.cuilen, buffer);
+        syslog(LOG_DEBUG, "%s(%d): +attribute CUI (%zu bytes): %s", __FUNCTION__, __LINE__, conn->s_state.redir.cuilen, buffer);
     }
   } else {
     conn->s_state.redir.cuilen = 0;
@@ -2590,7 +2592,7 @@ static int redir_cb_radius_auth_conf(struct radius_t *radius,
     conn->s_state.redir.statelen = attr->l-2;
     memcpy(conn->s_state.redir.statebuf, attr->v.t, attr->l-2);
     if (_options.debug)
-      syslog(LOG_DEBUG, "+attribute State (%d bytes)", conn->s_state.redir.statelen);
+      syslog(LOG_DEBUG, "%s(%d): +attribute State (%d bytes)", __FUNCTION__, __LINE__, conn->s_state.redir.statelen);
   } else {
     conn->s_state.redir.statelen = 0;
   }
@@ -2623,7 +2625,7 @@ static int redir_cb_radius_auth_conf(struct radius_t *radius,
     bytetohex(conn->authdata.v.eapmsg.data,
 	      conn->authdata.v.eapmsg.len,buffer,
 	      conn->authdata.v.eapmsg.len*2+1);
-    syslog(LOG_DEBUG, "+attribute EAP msg (%d bytes): %s",
+    syslog(LOG_DEBUG, "%s(%d): +attribute EAP msg (%d bytes): %s", __FUNCTION__, __LINE__,
            conn->authdata.v.eapmsg.len, buffer);
   }
 
@@ -2645,10 +2647,10 @@ static int redir_cb_radius_auth_conf(struct radius_t *radius,
 			    radius->secretlen) != 0) {
 	bytetosphex(dstbuffer, dstlen, hexString, sizeof(hexString));
         if (_options.debug)
-          syslog(LOG_DEBUG, "plainstring MPPE_SEND_KEY: len %zu key %s", dstlen, hexString);
+          syslog(LOG_DEBUG, "%s(%d): plainstring MPPE_SEND_KEY: len %zu key %s", __FUNCTION__, __LINE__, dstlen, hexString);
       } else {
         if (_options.debug)
-          syslog(LOG_DEBUG, "received radius MPPE_SEND_KEY attribute (%d bytes): %s", attr->l, hexString);
+          syslog(LOG_DEBUG, "%s(%d): received radius MPPE_SEND_KEY attribute (%d bytes): %s", __FUNCTION__, __LINE__, attr->l, hexString);
 	syslog(LOG_ERR, "Decryption of MPPE_SEND_KEY failed");
       }
     }
@@ -2665,10 +2667,10 @@ static int redir_cb_radius_auth_conf(struct radius_t *radius,
 			    radius->secretlen) != 0) {
 	bytetosphex(dstbuffer, dstlen, hexString, sizeof(hexString));
         if (_options.debug)
-          syslog(LOG_DEBUG, "plainstring MPPE_RECV_KEY: len %zu key %s", dstlen, hexString);
+          syslog(LOG_DEBUG, "%s(%d): plainstring MPPE_RECV_KEY: len %zu key %s", __FUNCTION__, __LINE__, dstlen, hexString);
       } else {
         if (_options.debug)
-          syslog(LOG_DEBUG, "received radius MPPE_RECV_KEY attribute (%d bytes): %s", attr->l, hexString);
+          syslog(LOG_DEBUG, "%s(%d): received radius MPPE_RECV_KEY attribute (%d bytes): %s", __FUNCTION__, __LINE__, attr->l, hexString);
 	syslog(LOG_ERR, "Decryption of MPPE_RECV_KEY failed");
       }
     }
@@ -2743,7 +2745,7 @@ static int redir_radius(struct redir_t *redir, struct in_addr *addr,
   radius_default_pack(radius, &radius_pack, RADIUS_CODE_ACCESS_REQUEST);
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "created radius packet (code=%d, id=%d, len=%d)\n",
+    syslog(LOG_DEBUG, "%s(%d): created radius packet (code=%d, id=%d, len=%d)\n", __FUNCTION__, __LINE__, 
            radius_pack.code, radius_pack.id, ntohs(radius_pack.length));
 
   if(conn->lang[0])
@@ -2786,7 +2788,7 @@ static int redir_radius(struct redir_t *redir, struct in_addr *addr,
       user_password[conn->authdata.v.papmsg.len] = 0;
 
       if (_options.debug)
-        syslog(LOG_DEBUG, "User password %d [%s]",
+        syslog(LOG_DEBUG, "%s(%d): User password %d [%s]", __FUNCTION__, __LINE__,
                conn->authdata.v.papmsg.len, user_password);
 
 #ifdef HAVE_OPENSSL
@@ -2875,7 +2877,7 @@ static int redir_radius(struct redir_t *redir, struct in_addr *addr,
                     conn->authdata.v.eapmsg.len,buffer,
                     conn->authdata.v.eapmsg.len*2+1);
           if (_options.debug)
-            syslog(LOG_DEBUG, "+attribute EAP msg (%d bytes): %s",
+            syslog(LOG_DEBUG, "%s(%d): +attribute EAP msg (%d bytes): %s", __FUNCTION__, __LINE__,
                    conn->authdata.v.eapmsg.len, buffer);
         }
       }
@@ -2911,7 +2913,7 @@ static int redir_radius(struct redir_t *redir, struct in_addr *addr,
 		 0, 0, 0, NULL, RADIUS_MD5LEN);
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "sending radius packet (code=%d, id=%d, len=%d)\n",
+    syslog(LOG_DEBUG, "%s(%d): sending radius packet (code=%d, id=%d, len=%d)\n", __FUNCTION__, __LINE__,
            radius_pack.code, radius_pack.id, ntohs(radius_pack.length));
 
   radius_req(radius, &radius_pack, conn);
@@ -2972,7 +2974,7 @@ int is_local_user(struct redir_t *redir, struct redir_conn_t *conn) {
   if (!_options.localusers) return 0;
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "checking %s for user %s", _options.localusers, conn->s_state.redir.username);
+    syslog(LOG_DEBUG, "%s(%d): checking %s for user %s", __FUNCTION__, __LINE__, _options.localusers, conn->s_state.redir.username);
 
   if (!(f = fopen(_options.localusers, "r"))) {
     syslog(LOG_ERR, "%s: fopen() failed opening %s!", strerror(errno), _options.localusers);
@@ -2983,7 +2985,7 @@ int is_local_user(struct redir_t *redir, struct redir_conn_t *conn) {
     char buffer[64];
     redir_chartohex(conn->s_state.redir.uamchal, buffer, REDIR_MD5LEN);
     if (_options.debug)
-      syslog(LOG_DEBUG, "challenge: %s", buffer);
+      syslog(LOG_DEBUG, "%s(%d): challenge: %s", __FUNCTION__, __LINE__, buffer);
   }/**/
 
   if (redir->secret && *redir->secret) {
@@ -3000,7 +3002,7 @@ int is_local_user(struct redir_t *redir, struct redir_conn_t *conn) {
     char buffer[64];
     redir_chartohex(chap_challenge, buffer, REDIR_MD5LEN);
     if (_options.debug)
-      syslog(LOG_DEBUG, "chap challenge: %s", buffer);
+      syslog(LOG_DEBUG, "%s(%d): chap challenge: %s", __FUNCTION__, __LINE__, buffer);
   }/**/
 
   switch (conn->authdata.type){
@@ -3030,7 +3032,7 @@ int is_local_user(struct redir_t *redir, struct redir_conn_t *conn) {
   user_password[RADIUS_PWSIZE] = 0;
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "looking for %s", conn->s_state.redir.username);
+    syslog(LOG_DEBUG, "%s(%d): looking for %s", __FUNCTION__, __LINE__, conn->s_state.redir.username);
   usernamelen = strlen(conn->s_state.redir.username);
 
   line=(char*)malloc(sz);
@@ -3060,7 +3062,7 @@ int is_local_user(struct redir_t *redir, struct redir_conn_t *conn) {
 	  !strncmp(conn->s_state.redir.username, u, usernamelen)) {
 
         if (_options.debug)
-          syslog(LOG_DEBUG, "found %s, checking password", u);
+          syslog(LOG_DEBUG, "%s(%d): found %s, checking password", __FUNCTION__, __LINE__, u);
 
 	if (conn->authdata.type == REDIR_AUTH_PAP) {
 	  if (!strcmp((char*)user_password, p))
@@ -3078,7 +3080,7 @@ int is_local_user(struct redir_t *redir, struct redir_conn_t *conn) {
 	    match = 1;
 	  else {
             if (_options.debug)
-              syslog(LOG_DEBUG, "bad password for %s", u);
+              syslog(LOG_DEBUG, "%s(%d): bad password for %s", __FUNCTION__, __LINE__, u);
 	  }
 	}
 
@@ -3088,7 +3090,7 @@ int is_local_user(struct redir_t *redir, struct redir_conn_t *conn) {
   }
 
   if (_options.debug)
-    syslog(LOG_DEBUG, "user %s %s",
+    syslog(LOG_DEBUG, "%s(%d): user %s %s", __FUNCTION__, __LINE__,
            conn->s_state.redir.username,
            match ? "found" : "not found");
 
@@ -3202,7 +3204,7 @@ static int _redir_close(int infd, int outfd) {
 static int _redir_close_exit(int infd, int outfd) {
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "close_exit");
+    syslog(LOG_DEBUG, "%s(%d): close_exit", __FUNCTION__, __LINE__);
 #endif
   _redir_close(infd,outfd);
   chilli_freeconn();
@@ -3230,7 +3232,7 @@ int redir_send_msg(struct redir_t *this, struct redir_msg_t *msg) {
   strlcpy(remote.sun_path, filedest,
           sizeof(remote.sun_path));
 
-#if defined (__FreeBSD__)  || defined (__APPLE__) || defined (__OpenBSD__)
+#if defined (__FreeBSD__)  || defined (__APPLE__) || defined (__OpenBSD__) || defined (__NetBSD__)
   remote.sun_len = strlen(remote.sun_path) + 1;
 #endif
 
@@ -3276,9 +3278,11 @@ pid_t redir_fork(int in, int out) {
     }
 
 #if defined(F_DUPFD)
-    if (fcntl(in,F_GETFL,0) == -1) return -1; safe_close(0);
+    if (fcntl(in,F_GETFL,0) == -1) return -1;
+    safe_close(0);
     if (fcntl(in,F_DUPFD,0) == -1) return -1;
-    if (fcntl(out,F_GETFL,1) == -1) return -1; safe_close(1);
+    if (fcntl(out,F_GETFL,1) == -1) return -1;
+    safe_close(1);
     if (fcntl(out,F_DUPFD,1) == -1) return -1;
 #else
     if (dup2(in,0) == -1) return -1;
@@ -3296,7 +3300,7 @@ int redir_main_exit(struct redir_socket_t *socket, int forked, redir_request *rr
   if (socket->sslcon) {
 #if(_debug_ > 1)
     if (_options.debug)
-      syslog(LOG_DEBUG, "Shutting down SSL");
+      syslog(LOG_DEBUG, "%s(%d): Shutting down SSL", __FUNCTION__, __LINE__);
 #endif
     openssl_shutdown(socket->sslcon, 2);
     openssl_free(socket->sslcon);
@@ -3357,7 +3361,7 @@ int redir_main(struct redir_t *redir,
   redir_chartohex(challenge, hexchal, REDIR_MD5LEN);                    \
   msg.mtype = msgtype;                                                  \
   memcpy(conn.s_state.redir.uamchal, challenge, REDIR_MD5LEN);          \
-  if (_options.debug) syslog(LOG_DEBUG, "---->>> resetting challenge: %s", hexchal)
+  if (_options.debug) syslog(LOG_DEBUG, "%s(%d): ---->>> resetting challenge: %s", __FUNCTION__, __LINE__, hexchal)
 
 #ifdef USING_IPC_UNIX
 #define redir_msg_send(msgopt)                                          \
@@ -3407,7 +3411,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "Calling redir_getstate()");
+    syslog(LOG_DEBUG, "%s(%d): Calling redir_getstate()", __FUNCTION__, __LINE__);
 #endif
 
   /*
@@ -3427,7 +3431,7 @@ int redir_main(struct redir_t *redir,
   if (state == -1) {
 #if(_debug_ > 1)
     if (_options.debug)
-      syslog(LOG_DEBUG, "getstate() session not found");
+      syslog(LOG_DEBUG, "%s(%d): getstate() session not found", __FUNCTION__, __LINE__);
 #endif
 
 #ifdef ENABLE_EWTAPI
@@ -3438,7 +3442,7 @@ int redir_main(struct redir_t *redir,
        */
 #if(_debug_ > 1)
       if (_options.debug)
-        syslog(LOG_DEBUG, "redir connection is SSL");
+        syslog(LOG_DEBUG, "%s(%d): redir connection is SSL", __FUNCTION__, __LINE__);
 #endif
       conn.flags |= USING_SSL;
     } else
@@ -3455,7 +3459,7 @@ int redir_main(struct redir_t *redir,
    */
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "Receiving HTTP%s Request", (conn.flags & USING_SSL) ? "S" : "");
+    syslog(LOG_DEBUG, "%s(%d): Receiving HTTP%s Request", __FUNCTION__, __LINE__, (conn.flags & USING_SSL) ? "S" : "");
 #endif
 
 #ifdef HAVE_SSL
@@ -3477,7 +3481,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
     if (_options.debug)
-      syslog(LOG_DEBUG, "SSL loop %d", loop);
+      syslog(LOG_DEBUG, "%s(%d): SSL loop %d", __FUNCTION__, __LINE__, loop);
 #endif
 
     while (!done) {
@@ -3485,13 +3489,13 @@ int redir_main(struct redir_t *redir,
         case -1:
 #if(_debug_ > 1)
           if (_options.debug)
-            syslog(LOG_DEBUG, "redir error, redir_main_exit");
+            syslog(LOG_DEBUG, "%s(%d): redir error, redir_main_exit", __FUNCTION__, __LINE__);
 #endif
           return redir_main_exit(&socket, forked, rreq);
         case 1:
           if (!loop) {
             if (_options.debug)
-              syslog(LOG_DEBUG, "Continue... SSL pending");
+              syslog(LOG_DEBUG, "%s(%d): Continue... SSL pending", __FUNCTION__, __LINE__);
             return 1;
           }
           break;
@@ -3503,7 +3507,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
     if (_options.debug)
-      syslog(LOG_DEBUG, "HTTPS Accepted");
+      syslog(LOG_DEBUG, "%s(%d): HTTPS Accepted", __FUNCTION__, __LINE__);
 #endif
   }
 #endif
@@ -3516,18 +3520,18 @@ int redir_main(struct redir_t *redir,
     case 1:
 #if(_debug_ > 1)
       if (_options.debug)
-        syslog(LOG_DEBUG, "Continue...");
+        syslog(LOG_DEBUG, "%s(%d): Continue...", __FUNCTION__, __LINE__);
 #endif
       return 1;
     default:
       if (_options.debug)
-        syslog(LOG_DEBUG, "Error calling get_req. Terminating %d", err);
+        syslog(LOG_DEBUG, "%s(%d): Error calling get_req. Terminating %d", __FUNCTION__, __LINE__, err);
       return redir_main_exit(&socket, forked, rreq);
   }
 
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "Processing HTTP%s Request", (conn.flags & USING_SSL) ? "S" : "");
+    syslog(LOG_DEBUG, "%s(%d): Processing HTTP%s Request", __FUNCTION__, __LINE__, (conn.flags & USING_SSL) ? "S" : "");
 #endif
 
   switch (conn.type) {
@@ -3685,14 +3689,14 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
                 if (_options.debug)
-                  syslog(LOG_DEBUG, "ssl_wrapper(%d)", getpid());
+                  syslog(LOG_DEBUG, "%s(%d): ssl_wrapper(%d)", __FUNCTION__, __LINE__, getpid());
 #endif
 
                 while (clen > 0) {
                   rd = clen > bufsize ? bufsize : clen;
 #if(_debug_ > 1)
                   if (_options.debug)
-                    syslog(LOG_DEBUG, "reading(%d)", rd);
+                    syslog(LOG_DEBUG, "%s(%d): reading(%d)", __FUNCTION__, __LINE__, rd);
 #endif
                   if ((buflen = openssl_read(socket.sslcon, buffer, rd, 0)) > 0) {
                     if (safe_write(ptoc[1], buffer, (size_t) buflen) < 0) {
@@ -3706,12 +3710,12 @@ int redir_main(struct redir_t *redir,
                 while (1) {
 #if(_debug_ > 1)
                   if (_options.debug)
-                    syslog(LOG_DEBUG, "script_read");
+                    syslog(LOG_DEBUG, "%s(%d): script_read", __FUNCTION__, __LINE__);
 #endif
                   if ((buflen = safe_read(ctop[0], buffer, bufsize)) > 0) {
 #if(_debug_ > 1)
                     if (_options.debug)
-                      syslog(LOG_DEBUG, "script_read(%zd)",buflen);
+                      syslog(LOG_DEBUG, "%s(%d): script_read(%zd)", __FUNCTION__, __LINE__, buflen);
 #endif
                     if (redir_write(&socket, buffer, (size_t) buflen) < 0) {
                       syslog(LOG_ERR, "%s: redir_write() failed!", strerror(errno));
@@ -3719,12 +3723,12 @@ int redir_main(struct redir_t *redir,
                     }
 #if(_debug_ > 1)
                     if (_options.debug)
-                      syslog(LOG_DEBUG, "ssl_write(%zd)",buflen);
+                      syslog(LOG_DEBUG, "%s(%d): ssl_write(%zd)", __FUNCTION__, __LINE__, buflen);
 #endif
                   } else {
 #if(_debug_ > 1)
                     if (_options.debug)
-                      syslog(LOG_DEBUG, "done");
+                      syslog(LOG_DEBUG, "%s(%d): done", __FUNCTION__, __LINE__);
 #endif
                     break;
                   }
@@ -3732,7 +3736,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
                 if (_options.debug)
-                  syslog(LOG_DEBUG, "ssl_wrapper(%d) done", getpid());
+                  syslog(LOG_DEBUG, "%s(%d): ssl_wrapper(%d) done", __FUNCTION__, __LINE__, getpid());
 #endif
 
                 safe_close(ptoc[1]);
@@ -3748,7 +3752,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
                 if (_options.debug)
-                  syslog(LOG_DEBUG, "script(%d)", getpid());
+                  syslog(LOG_DEBUG, "%s(%d): script(%d)", __FUNCTION__, __LINE__, getpid());
 #endif
               }
             }
@@ -3804,7 +3808,7 @@ int redir_main(struct redir_t *redir,
                 if (isWPAD && _options.wpadpacfile) {
                   char *binqqargs[3] = { _options.wpadpacfile, 0 } ;
                   if (_options.debug)
-                    syslog(LOG_DEBUG, "Running: %s", _options.wpadpacfile);
+                    syslog(LOG_DEBUG, "%s(%d): Running: %s", __FUNCTION__, __LINE__, _options.wpadpacfile);
                   execv(*binqqargs, binqqargs);
                   break;
                 }
@@ -3815,7 +3819,7 @@ int redir_main(struct redir_t *redir,
                   char *binqqargs[3] = { _options.wwwbin, buffer, 0 } ;
 
                   if (_options.debug)
-                    syslog(LOG_DEBUG, "Running: %s %s/%s",_options.wwwbin, _options.wwwdir, filename);
+                    syslog(LOG_DEBUG, "%s(%d): Running: %s %s/%s", __FUNCTION__, __LINE__, _options.wwwbin, _options.wwwdir, filename);
                   snprintf(buffer, sizeof(buffer), "%s/%s", _options.wwwdir, filename);
 
                   execv(*binqqargs, binqqargs);
@@ -3879,7 +3883,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "Processing received request");
+    syslog(LOG_DEBUG, "%s(%d): Processing received request", __FUNCTION__, __LINE__);
 #endif
 
   /* default hexchal for use in replies */
@@ -3896,13 +3900,13 @@ int redir_main(struct redir_t *redir,
         if (splash) {
 
           if (_options.debug)
-            syslog(LOG_DEBUG, "redir_accept: SPLASH reauth");
+            syslog(LOG_DEBUG, "%s(%d): redir_accept: SPLASH reauth", __FUNCTION__, __LINE__);
           reauth = 1;
 
         } else {
 
           if (_options.debug)
-            syslog(LOG_DEBUG, "redir_accept: already logged on");
+            syslog(LOG_DEBUG, "%s(%d): redir_accept: already logged on", __FUNCTION__, __LINE__);
 
           redir_reply(redir, &socket, &conn, REDIR_ALREADY, NULL, 0,
                       NULL, NULL, conn.s_state.redir.userurl, NULL,
@@ -3918,7 +3922,7 @@ int redir_main(struct redir_t *redir,
           (conn.s_state.uamtime + _options.challengetimeout2) <
           mainclock_now()) {
         if (_options.debug)
-          syslog(LOG_DEBUG, "redir_accept: challenge expired: %ld : %ld",
+          syslog(LOG_DEBUG, "%s(%d): redir_accept: challenge expired: %ld : %ld", __FUNCTION__, __LINE__,
                  (long) conn.s_state.uamtime, (long) mainclock_now());
 
         redir_memcopy(REDIR_CHALLENGE);
@@ -3955,7 +3959,7 @@ int redir_main(struct redir_t *redir,
 
 #ifdef ENABLE_MODULES
         if (_options.debug)
-          syslog(LOG_DEBUG, "checking modules...");
+          syslog(LOG_DEBUG, "%s(%d): checking modules...", __FUNCTION__, __LINE__);
         for (i=0; i < MAX_MODULES; i++) {
           if (!_options.modules[i].name[0]) break;
           if (_options.modules[i].ctx) {
@@ -3975,14 +3979,14 @@ int redir_main(struct redir_t *redir,
         }
         if (flags & CHILLI_MOD_REDIR_SKIP_RADIUS) {
           if (_options.debug)
-            syslog(LOG_DEBUG, "Skipping RADIUS authentication");
+            syslog(LOG_DEBUG, "%s(%d): Skipping RADIUS authentication", __FUNCTION__, __LINE__);
         } else {
 #endif
 
           termstate = REDIR_TERM_RADIUS;
 
           if (optionsdebug)
-            syslog(LOG_DEBUG, "redir_accept: Sending RADIUS request");
+            syslog(LOG_DEBUG, "%s(%d): redir_accept: Sending RADIUS request", __FUNCTION__, __LINE__);
 
           redir_radius(redir, &address->sin_addr, &conn, reauth);
           termstate = REDIR_TERM_REPLY;
@@ -3993,7 +3997,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
         if (_options.debug)
-          syslog(LOG_DEBUG, "Received RADIUS reply");
+          syslog(LOG_DEBUG, "%s(%d): Received RADIUS reply", __FUNCTION__, __LINE__);
 #endif
       }
 
@@ -4008,7 +4012,7 @@ int redir_main(struct redir_t *redir,
         msg.mtype = REDIR_LOGIN;
 
         if (_options.debug)
-          syslog(LOG_DEBUG, "%s handling Access-Accept",__FUNCTION__);
+          syslog(LOG_DEBUG, "%s(%d): handling Access-Accept", __FUNCTION__, __LINE__);
 
         redir_reply(redir, &socket, &conn, REDIR_SUCCESS, NULL,
                     conn.s_params.sessiontimeout, NULL,
@@ -4025,7 +4029,7 @@ int redir_main(struct redir_t *redir,
         int hasnexturl = (strlen((char *)conn.s_params.url) > 5);
 
         if (_options.debug)
-          syslog(LOG_DEBUG, "%s handling Access-Reject",__FUNCTION__);
+          syslog(LOG_DEBUG, "%s(%d): handling Access-Reject", __FUNCTION__, __LINE__);
 
         if (!hasnexturl) {
           if (_options.challengetimeout)
@@ -4046,7 +4050,7 @@ int redir_main(struct redir_t *redir,
       }
 
       if (_options.debug)
-        syslog(LOG_DEBUG, "-->> Msg userurl=[%s]\n",conn.s_state.redir.userurl);
+        syslog(LOG_DEBUG, "%s(%d): -->> Msg userurl=[%s]\n", __FUNCTION__, __LINE__, conn.s_state.redir.userurl);
       return redir_main_exit(&socket, forked, rreq);
     }
 
@@ -4179,7 +4183,7 @@ int redir_main(struct redir_t *redir,
             "}\r\n";
 
         if (_options.debug)
-          syslog(LOG_DEBUG, "WPAD %s:%d", __FUNCTION__, __LINE__);
+          syslog(LOG_DEBUG, "%s(%d): WPAD", __FUNCTION__, __LINE__);
 
         snprintf(buffer, bufsize, hdr, strlen(cnt));
         redir_write(&socket, buffer, strlen(buffer));
@@ -4197,7 +4201,7 @@ int redir_main(struct redir_t *redir,
    *  It must be an original request
    */
   if (_options.debug)
-    syslog(LOG_DEBUG, "redir_accept: Original request host=%s", httpreq.host);
+    syslog(LOG_DEBUG, "%s(%d): redir_accept: Original request host=%s", __FUNCTION__, __LINE__, httpreq.host);
 
 #ifdef ENABLE_REDIRDNSREQ
   if (_options.redirdnsreq && tun) {
@@ -4317,7 +4321,7 @@ int redir_main(struct redir_t *redir,
 
 #if(_debug_ > 1)
   if (_options.debug)
-    syslog(LOG_DEBUG, "---->>> challenge: %s", hexchal);
+    syslog(LOG_DEBUG, "%s(%d): ---->>> challenge: %s", __FUNCTION__, __LINE__, hexchal);
 #endif
 
   if (_options.macreauth && !conn.s_state.authenticated) {

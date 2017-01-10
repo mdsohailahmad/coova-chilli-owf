@@ -279,7 +279,7 @@ int options_fromfd(int fd, bstring bt) {
 #ifdef ENABLE_IEEE8021Q
   if (!option_s_l(bt, &o.vlanupdate)) return 0;
 #endif
-#ifdef ENABLE_PROXYVSA
+#if defined(ENABLE_PROXYVSA) || defined(ENABLE_LOCATION)
   if (!option_s_l(bt, &o.locationupdate)) return 0;
 #endif
 
@@ -305,6 +305,8 @@ int options_fromfd(int fd, bstring bt) {
 #endif
   if (!option_s_l(bt, &o.routeif)) return 0;
   if (!option_s_l(bt, &o.peerkey)) return 0;
+
+  if (!option_s_l(bt, &o.rfc7710uri)) return 0;
 
   if (!option_s_l(bt, &o.macsuffix)) return 0;
   if (!option_s_l(bt, &o.macpasswd)) return 0;
@@ -334,9 +336,6 @@ int options_fromfd(int fd, bstring bt) {
 #endif
 #ifdef HAVE_NETFILTER_COOVA
   if (!option_s_l(bt, &o.kname)) return 0;
-#endif
-#ifdef ENABLE_DNSLOG
-  if (!option_s_l(bt, &o.dnslog)) return 0;
 #endif
 #ifdef ENABLE_IPWHITELIST
   if (!option_s_l(bt, &o.ipwhitelist)) return 0;
@@ -481,7 +480,7 @@ int options_save(char *file, bstring bt) {
 #ifdef ENABLE_IEEE8021Q
   if (!option_s_s(bt, &o.vlanupdate)) return 0;
 #endif
-#ifdef ENABLE_PROXYVSA
+#if defined(ENABLE_PROXYVSA) || defined(ENABLE_LOCATION)
   if (!option_s_s(bt, &o.locationupdate)) return 0;
 #endif
 
@@ -508,6 +507,8 @@ int options_save(char *file, bstring bt) {
 #endif
   if (!option_s_s(bt, &o.routeif)) return 0;
   if (!option_s_s(bt, &o.peerkey)) return 0;
+
+  if (!option_s_s(bt, &o.rfc7710uri)) return 0;
 
   if (!option_s_s(bt, &o.macsuffix)) return 0;
   if (!option_s_s(bt, &o.macpasswd)) return 0;
@@ -537,9 +538,6 @@ int options_save(char *file, bstring bt) {
 #endif
 #ifdef HAVE_NETFILTER_COOVA
   if (!option_s_s(bt, &o.kname)) return 0;
-#endif
-#ifdef ENABLE_DNSLOG
-  if (!option_s_s(bt, &o.dnslog)) return 0;
 #endif
 #ifdef ENABLE_IPWHITELIST
   if (!option_s_s(bt, &o.ipwhitelist)) return 0;
