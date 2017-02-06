@@ -60,7 +60,7 @@ run_up() {
 			ipt -I OUTPUT -t raw -j NOTRACK -o $DHCPIF
 		fi
 
-		if [[ $HS_LOCAL_DNS == on ]]; then
+		if [[ $HS_LOCAL_DNS == on ]] && [[ $(uci get system.smartap.bridge_mode_without_vlan) -eq 1 ]]; then
 			ipt -A prerouting_from_lan -t nat -p udp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
 			ipt -A prerouting_from_lan -t nat -p tcp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
 		else
