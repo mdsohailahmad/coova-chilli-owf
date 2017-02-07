@@ -433,8 +433,10 @@ int dhcp_net_send(struct _net_interface *netif, unsigned char *hismac,
 
 int dhcp_send(struct dhcp_t *this, int idx,
               unsigned char *hismac, uint8_t *packet, size_t length) {
+#ifdef HAVE_NETFILTER_COOVA
 	if(_options.kname)
 		return 0;
+#endif
 
   net_interface *iface = 0;
 

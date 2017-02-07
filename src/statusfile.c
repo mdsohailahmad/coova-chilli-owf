@@ -297,6 +297,7 @@ int loadstatus() {
       }
     }
 	
+#ifdef HAVE_NETFILTER_COOVA
 	/*
 	 * Changes by nilesh
 	 * call connection up script for every connection
@@ -308,6 +309,7 @@ int loadstatus() {
         syslog(LOG_DEBUG, "Calling connection up script: %s\n", _options.conup);
       runscript(appconn, _options.conup, 0, 0);
     }
+#endif
   }
 
   fclose(file);
