@@ -7640,7 +7640,7 @@ int chilli_main(int argc, char **argv) {
       syslog(LOG_ERR, "%s: select init", strerror(errno));
 
 #ifdef HAVE_NETFILTER_COOVA
-	if(_options.kname) {
+	if(!_options.kname) {
 #endif
 
 #ifdef ENABLE_MULTIROUTE
@@ -7678,7 +7678,7 @@ int chilli_main(int argc, char **argv) {
     net_select_reg(&sctx, dhcp->relayfd, SELECT_READ,
                    (select_callback)dhcp_relay_decaps, dhcp, 0);
 #ifdef HAVE_NETFILTER_COOVA
-	if(_options.kname) {
+	if(!_options.kname) {
 #endif
     
 	for (i=0; i < MAX_RAWIF && dhcp->rawif[i].fd > 0; i++) {
@@ -7846,6 +7846,7 @@ int chilli_main(int argc, char **argv) {
       syslog(LOG_WARNING, "Not stopping sessions! seskeepalive should be used with compile option --enable-binstatusfile");
 #endif
 
+#ifdef HAVE_NETFILTER_COOVA
       // run down script for each authenticated connection if kname is enabled
       // Modification by nilesh
       if(_options.kname) {
@@ -7860,12 +7861,16 @@ int chilli_main(int argc, char **argv) {
       }
       // End modification
     } else {
+#endif
       killconn();
 #ifdef ENABLE_STATFILE
       if (printstatus() != 0)
         syslog(LOG_ERR, "%s: could not save status file", strerror(errno));
 #endif
+
+#ifdef HAVE_NETFILTER_COOVA
     }
+#endif
 
     child_killall(SIGTERM);
 
