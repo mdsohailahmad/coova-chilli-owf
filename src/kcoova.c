@@ -78,6 +78,8 @@ kmod_coova_sync() {
   unsigned long long int pin;
   unsigned long long int pout;
   struct dhcp_conn_t *conn;
+  char interface_name[IFNAMSIZ];
+  char bridge_interface_name[IFNAMSIZ];
 
   if (!_options.kname) return -1;
 
@@ -175,7 +177,16 @@ kmod_coova_sync() {
 					kmod('*', &in_ip);
 				}
 			  }
-            if (_options.swapoctets) {
+
+			  uint8_t interface_field_count = sscanf(line, "interface=%s br-interface=%s", interface_name, bridge_interface_name);
+			  strcpy(appconn->interface_name, interface_name);
+
+			  if(interface_field_count == 2) {
+				  strcpy(appconn->bridge_interface_name, bridge_interface_name);
+				  appconn->bridged = 1;
+			  }
+
+			if (_options.swapoctets) {
               appconn->s_state.input_octets = bin;
               appconn->s_state.output_octets = bout;
               appconn->s_state.input_packets = pin;
