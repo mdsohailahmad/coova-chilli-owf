@@ -308,7 +308,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		struct net_device *bridge_dev = nf_bridge_get_physindev(skb);
 		if (bridge_dev) {
 			e->bridged = 1;
-			memcpy(e->interface_name, bridge_dev->name, IFNAMSIZ);
+			memcpy(e->bridge_interface_name, bridge_dev->name, IFNAMSIZ);
 		}
 		else {
 			e->bridged = 0;
@@ -323,7 +323,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		struct net_device *bridge_dev = nf_bridge_get_physoutdev(skb);
 		if (bridge_dev) {
 			e->bridged = 1;
-			memcpy(e->interface_name, bridge_dev->name, IFNAMSIZ);
+			memcpy(e->bridge_interface_name, bridge_dev->name, IFNAMSIZ);
 		}
 		else {
 			e->bridged = 0;
