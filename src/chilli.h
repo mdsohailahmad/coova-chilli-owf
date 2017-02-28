@@ -162,7 +162,7 @@ struct app_conn_t {
 #endif
 
   char interface_name[IFNAMSIZ];
-  char bridge_interface_name[IFNAMSIZ];
+  char bridged_interface_name[IFNAMSIZ];
   uint8_t bridged:1;
 };
 

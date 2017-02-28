@@ -5461,7 +5461,7 @@ int chilli_getinfo(struct app_conn_t *appconn, bstring b, int fmt) {
 		bconcat(b, tmp);
 
 		if(appconn->bridged) {
-			bassignformat(tmp, " br-interface=%s", appconn->bridge_interface_name);
+			bassignformat(tmp, " br-interface=%s", appconn->bridged_interface_name);
 			bconcat(b, tmp);
 		}
 

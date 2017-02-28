@@ -79,7 +79,7 @@ kmod_coova_sync() {
   unsigned long long int pout;
   struct dhcp_conn_t *conn;
   char interface_name[IFNAMSIZ];
-  char bridge_interface_name[IFNAMSIZ];
+  char bridged_interface_name[IFNAMSIZ];
 
   if (!_options.kname) return -1;
 
@@ -95,13 +95,17 @@ kmod_coova_sync() {
       continue;
     }
 
+	memset(bridged_interface_name, 0, IFNAMSIZ);
+	memset(interface_name, 0, IFNAMSIZ);
+
     if (sscanf(line,
          "mac=%X-%X-%X-%X-%X-%X "
          "src=%s state=%u "
          "bin=%llu bout=%llu "
-         "pin=%llu pout=%llu",
+         "pin=%llu pout=%llu"
+		 "interface=%s br-interface=%s",
          &maci[0], &maci[1], &maci[2], &maci[3], &maci[4], &maci[5],
-         ip, &state, &bin, &bout, &pin, &pout) == 12) {
+         ip, &state, &bin, &bout, &pin, &pout, interface_name, bridged_interface_name) >= 12) {
       uint8_t mac[6];
       int i;
 
@@ -178,11 +182,10 @@ kmod_coova_sync() {
 				}
 			  }
 
-			  uint8_t interface_field_count = sscanf(line, "interface=%s br-interface=%s", interface_name, bridge_interface_name);
 			  strcpy(appconn->interface_name, interface_name);
 
-			  if(interface_field_count == 2) {
-				  strcpy(appconn->bridge_interface_name, bridge_interface_name);
+			  if(bridged_interface_name[0]) {
+				  strcpy(appconn->bridged_interface_name, bridged_interface_name);
 				  appconn->bridged = 1;
 			  }
 
