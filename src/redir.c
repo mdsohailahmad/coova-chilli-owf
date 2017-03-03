@@ -548,6 +548,14 @@ static void bstring_buildurl(bstring str, struct redir_conn_t *conn,
       bconcat(str, bt);
     } else
 #endif
+#ifdef HAVE_NETFILTER_COOVA
+  if(_options.kname && _options.vlanportal && conn->s_state.vlanId > 0) {
+    bcatcstr(str, amp);
+    bcatcstr(str, "vlan=");
+    bassignformat(bt, "%d", conn->s_state.vlanId);
+    bconcat(str, bt);
+  } else
+#endif
       if (redir->vlan) {
         bcatcstr(str, amp);
         bcatcstr(str, "vlan=");
