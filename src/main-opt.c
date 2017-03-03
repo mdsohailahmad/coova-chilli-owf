@@ -1269,6 +1269,8 @@ int main(int argc, char **argv) {
 
 #ifdef HAVE_NETFILTER_COOVA
   _options.kname = STRDUP(args_info.kname_arg);
+  _options.vlanportal = args_info.vlanportal;
+  _options.vlanpat = STRDUP(args_info.vlanpat);
 #endif
 
 #ifdef ENABLE_IPWHITELIST

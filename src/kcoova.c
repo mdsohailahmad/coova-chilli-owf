@@ -102,7 +102,7 @@ kmod_coova_sync() {
          "mac=%X-%X-%X-%X-%X-%X "
          "src=%s state=%u "
          "bin=%llu bout=%llu "
-         "pin=%llu pout=%llu"
+         "pin=%llu pout=%llu "
 		 "interface=%s br-interface=%s",
          &maci[0], &maci[1], &maci[2], &maci[3], &maci[4], &maci[5],
          ip, &state, &bin, &bout, &pin, &pout, interface_name, bridged_interface_name) >= 12) {
@@ -182,11 +182,22 @@ kmod_coova_sync() {
 				}
 			  }
 
-			  strcpy(appconn->interface_name, interface_name);
+			  if(appconn->interface_name[0])
+			 	strcpy(appconn->interface_name, interface_name);
 
 			  if(bridged_interface_name[0]) {
 				  strcpy(appconn->bridged_interface_name, bridged_interface_name);
 				  appconn->bridged = 1;
+			  }
+
+			  if(_options.vlanportal) {
+				  int vlanId = 0;
+
+				  // prefer bridged_interface_name before interface_name for checking vlan pattern
+				  if(appconn->bridged_interface_name[0] && sscanf(appconn->bridged_interface_name, _options.vlanpat, &vlanId) == 1)
+					  appconn->s_state.vlanId = vlanId;
+				  else if(appconn->interface_name[0] && sscanf(appconn->interface_name, _options.vlanpat, &vlanId) == 1)
+					  appconn->s_state.vlanId = vlanId;
 			  }
 
 			if (_options.swapoctets) {
