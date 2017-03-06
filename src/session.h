@@ -173,6 +173,10 @@ struct session_state {
   uint16_t tag8021q;
 #endif
 
+#ifdef HAVE_NETFILTER_COOVA
+  int vlanId;
+#endif
+
 #ifdef ENABLE_LOCATION
 #define MAX_LOCATION_LENGTH 56
   char location[MAX_LOCATION_LENGTH];

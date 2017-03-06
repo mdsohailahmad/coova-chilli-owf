@@ -35,6 +35,7 @@
 #include <asm/byteorder.h>
 
 #include <linux/netfilter/x_tables.h>
+#include <linux/netfilter_bridge.h>
 #include "xt_coova.h"
 
 MODULE_AUTHOR("David Bird <david@coova.com>");
@@ -78,6 +79,10 @@ struct coova_entry {
 	u_int64_t		bytes_out;
 	u_int64_t		pkts_in;
 	u_int64_t		pkts_out;
+
+	u_int8_t		bridged;
+	char interface_name[IFNAMSIZ];
+	char bridged_interface_name[IFNAMSIZ];
 };
 
 struct coova_table {
@@ -176,6 +181,7 @@ coova_entry_init(struct coova_table *t, const union nf_inet_addr *addr,
 	memcpy(&e->addr, addr, sizeof(e->addr));
 	e->index     = 1;
 	e->family    = family;
+	e->bridged = 0;
 
 	coova_entry_reset(e);
 
@@ -286,6 +292,41 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		} else {
 			e->bytes_in += (uint64_t) p_bytes;
 			e->pkts_in ++;
+		}
+	}
+
+	/* Modification by nilesh
+	 * store interface name
+	 * and information whether it is bridged packet (vlans bridged into one bridge)
+	 */
+
+	if (info->side == XT_COOVA_SOURCE) {
+		if (skb->dev) {
+			memcpy(e->interface_name, skb->dev->name, IFNAMSIZ);
+		}
+
+		struct net_device *bridge_dev = nf_bridge_get_physindev(skb);
+		if (bridge_dev) {
+			e->bridged = 1;
+			memcpy(e->bridged_interface_name, bridge_dev->name, IFNAMSIZ);
+		}
+		else {
+			e->bridged = 0;
+		}
+	}
+
+	if (info->side == XT_COOVA_DEST) {
+		/*if (skb->dev) {
+			memcpy(e->interface_name, skb->dev->name, IFNAMSIZ);
+		}*/
+
+		struct net_device *bridge_dev = nf_bridge_get_physoutdev(skb);
+		if (bridge_dev) {
+			e->bridged = 1;
+			memcpy(e->bridged_interface_name, bridge_dev->name, IFNAMSIZ);
+		}
+		else {
+			e->bridged = 0;
 		}
 	}
 
@@ -459,6 +500,10 @@ static int coova_seq_show(struct seq_file *seq, void *v)
 	seq_printf(seq, " pin=%llu pout=%llu", 
 		   (unsigned long long)e->pkts_in, 
 		   (unsigned long long)e->pkts_out);
+	seq_printf(seq, " interface=%s", e->interface_name);
+	if(e->bridged) {
+		seq_printf(seq, " br-interface=%s", e->bridged_interface_name);
+	}
 	seq_printf(seq, "\n");
 	return 0;
 }
