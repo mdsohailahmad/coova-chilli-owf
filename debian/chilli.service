@@ -1,0 +1,14 @@
+[Unit]
+Description = Coova Chilli
+After = network.target
+Requires = network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/chilli -c /etc/chilli.conf --fg
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/var/run/chilli.br0.pid
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -15,4 +15,4 @@ chown -R chilli /etc/chilli/www
     done
 }
 
-/etc/init.d/chilli start
+#/etc/init.d/chilli start

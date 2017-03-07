@@ -1,2 +1,2 @@
 /etc/default/chilli
-/etc/init.d/chilli
+/lib/systemd/system/chilli.service
