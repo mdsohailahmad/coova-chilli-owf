@@ -5526,6 +5526,13 @@ void chilli_print(bstring s, int listfmt,
           bcatcstr(b, ",\"ipAddress\":\"");
           bcatcstr(b, inet_ntoa(appconn->hisip));
           bcatcstr(b, "\"");
+#ifdef HAVE_NETFILTER_COOVA
+			if (_options.kname && _options.vlanportal && appconn->s_state.vlanId) {
+				bcatcstr(b,",\"vlan\":");
+				bassignformat(tmp, "%d", appconn->s_state.vlanId);
+				bconcat(b, tmp);
+			}
+#endif
         }
 
         if (conn) {

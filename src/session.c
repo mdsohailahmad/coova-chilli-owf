@@ -86,13 +86,6 @@ int session_json_params(struct session_state *state,
     bconcat(json, tmp);
   }
 #endif
-#ifdef HAVE_NETFILTER_COOVA
-	if (_options.kname && _options.vlanportal && state->vlanId) {
-		bcatcstr(json,",\"vlan\":");
-		bassignformat(tmp, "%d", state->vlanId);
-		bconcat(json, tmp);
-	}
-#endif
   if (params->maxinputoctets) {
     bcatcstr(json,",\"maxInputOctets\":");
     bassignformat(tmp, "%lld", params->maxinputoctets);
