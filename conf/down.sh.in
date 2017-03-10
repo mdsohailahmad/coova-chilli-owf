@@ -9,19 +9,10 @@ run_down() {
 	# remove chilli specific firewall rules
 	rm -f @VARRUN@/chilli.$TUNTAP-*.sh
 
+	/etc/init.d/firewall restart
 	if [[ -n $KNAME ]]; then
 		ipset -q destroy passthrough
 	fi
 }
-
-# flush all tables and set default policy to accept
-for table in raw mangle nat filter; do
-	iptables -w -t $table -F
-	iptables -w -t $table -X
-
-	for chain in INPUT OUTPUT FORWARD PREROUTING POSTROUTING; do
-		iptables -w -t $table -P ACCEPT 2>&-
-	done
-done
 
 run_down
