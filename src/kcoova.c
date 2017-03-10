@@ -182,7 +182,7 @@ kmod_coova_sync() {
 				}
 			  }
 
-			  if(appconn->interface_name[0])
+			  if(interface_name[0])
 			 	strcpy(appconn->interface_name, interface_name);
 
 			  if(bridged_interface_name[0]) {

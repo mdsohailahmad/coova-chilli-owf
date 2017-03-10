@@ -81,10 +81,17 @@ int session_json_params(struct session_state *state,
   bconcat(json, tmp);
 #ifdef ENABLE_IEEE8021Q
   if (_options.ieee8021q && state->tag8021q) {
-    bcatcstr(json,",\"vlan\":");
+	bcatcstr(json,",\"vlan\":");
     bassignformat(tmp, "%d", (int)ntohs(state->tag8021q & PKT_8021Q_MASK_VID));
     bconcat(json, tmp);
   }
+#endif
+#ifdef HAVE_NETFILTER_COOVA
+	if (_options.kname && _options.vlanportal && state->vlanId) {
+		bcatcstr(json,",\"vlan\":");
+		bassignformat(tmp, "%d", state->vlanId);
+		bconcat(json, tmp);
+	}
 #endif
   if (params->maxinputoctets) {
     bcatcstr(json,",\"maxInputOctets\":");

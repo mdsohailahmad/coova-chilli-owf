@@ -5457,13 +5457,22 @@ int chilli_getinfo(struct app_conn_t *appconn, bstring b, int fmt) {
         }
 #endif
 
-		bassignformat(tmp, " interface=%s", appconn->interface_name);
-		bconcat(b, tmp);
+#ifdef HAVE_NETFILTER_COOVA
+		if (_options.kname) {
+			if(_options.vlanportal && appconn->s_state.vlanId) {
+				bassignformat(tmp, " vlan=%d", appconn->s_state.vlanId);
+				bconcat(b, tmp);
+			}
 
-		if(appconn->bridged) {
-			bassignformat(tmp, " br-interface=%s", appconn->bridged_interface_name);
+			bassignformat(tmp, " interface=%s", appconn->interface_name);
 			bconcat(b, tmp);
+
+			if(appconn->bridged) {
+				bassignformat(tmp, " br-interface=%s", appconn->bridged_interface_name);
+				bconcat(b, tmp);
+			}
 		}
+#endif
 
         bdestroy(tmp);
       }

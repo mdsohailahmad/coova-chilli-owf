@@ -353,6 +353,7 @@ static int base64decoder (char * eapstr, struct eapmsg_t * eapmsg)
 
   char car;
   char in64[4];
+  memset(in64, 0, 4);
   int  compt;
   int  x_in = 0;
   int  x_out = 0;
