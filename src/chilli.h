@@ -160,10 +160,6 @@ struct app_conn_t {
   struct list_entity loc_sess;
   struct loc_search_t *loc_search_node;
 #endif
-
-  char interface_name[IFNAMSIZ];
-  char bridged_interface_name[IFNAMSIZ];
-  uint8_t bridged:1;
 };
 
 #define VAL_STRING   0

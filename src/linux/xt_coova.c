@@ -80,8 +80,7 @@ struct coova_entry {
 	u_int64_t		pkts_in;
 	u_int64_t		pkts_out;
 
-	u_int8_t		bridged;
-	char interface_name[IFNAMSIZ];
+	char direct_interface_name[IFNAMSIZ];
 	char bridged_interface_name[IFNAMSIZ];
 };
 
@@ -181,7 +180,8 @@ coova_entry_init(struct coova_table *t, const union nf_inet_addr *addr,
 	memcpy(&e->addr, addr, sizeof(e->addr));
 	e->index     = 1;
 	e->family    = family;
-	e->bridged = 0;
+	memcpy(&e->direct_interface_name, 0, IFNAMSIZ);
+	memcpy(&e->bridged_interface_name, 0, IFNAMSIZ);
 
 	coova_entry_reset(e);
 
@@ -262,6 +262,12 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		if (skb_mac_header(skb) >= skb->head &&
 		    skb_mac_header(skb) + ETH_HLEN <= skb->data) {
 			hwaddr = eth_hdr(skb)->h_source;
+
+			// check brodcast / multicast
+			// the most significant bit (right most) of the
+			// most significant byte (left most) of mac address
+			if (hwaddr[0] << 5)
+				return ret;
 		} else {
 			return ret;
 		}
@@ -302,31 +308,36 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 
 	if (info->side == XT_COOVA_SOURCE) {
 		if (skb->dev) {
-			memcpy(e->interface_name, skb->dev->name, IFNAMSIZ);
+			memcpy(e->direct_interface_name, skb->dev->name, IFNAMSIZ);
 		}
 
 		struct net_device *bridge_dev = nf_bridge_get_physindev(skb);
 		if (bridge_dev) {
-			e->bridged = 1;
 			memcpy(e->bridged_interface_name, bridge_dev->name, IFNAMSIZ);
 		}
-		else {
-			e->bridged = 0;
+		else if (e->bridged_interface_name[0]) {
+			// copy zeroes only if currently has some value
+			memcpy(e->bridged_interface_name, 0, IFNAMSIZ);
 		}
 	}
 
 	if (info->side == XT_COOVA_DEST) {
-		/*if (skb->dev) {
-			memcpy(e->interface_name, skb->dev->name, IFNAMSIZ);
-		}*/
+		/*
+		 * No need to use skb->dev->name here
+		 * We are not interested in what interface
+		 * packet arrived on in case the packet is coming from WAN->LAN
+		 *
+		 * We need to check bridge because the port may change
+		 * when client roams from one vlan to another
+		 */
 
 		struct net_device *bridge_dev = nf_bridge_get_physoutdev(skb);
 		if (bridge_dev) {
-			e->bridged = 1;
 			memcpy(e->bridged_interface_name, bridge_dev->name, IFNAMSIZ);
 		}
-		else {
-			e->bridged = 0;
+		else if(e->bridged_interface_name[0]) {
+			// copy zeroes only if currently has some value
+			memcpy(e->bridged_interface_name, 0, IFNAMSIZ);
 		}
 	}
 
@@ -500,9 +511,9 @@ static int coova_seq_show(struct seq_file *seq, void *v)
 	seq_printf(seq, " pin=%llu pout=%llu", 
 		   (unsigned long long)e->pkts_in, 
 		   (unsigned long long)e->pkts_out);
-	seq_printf(seq, " interface=%s", e->interface_name);
+	seq_printf(seq, " direct-interface=%s", e->direct_interface_name);
 	if(e->bridged) {
-		seq_printf(seq, " br-interface=%s", e->bridged_interface_name);
+		seq_printf(seq, " bridged-interface=%s", e->bridged_interface_name);
 	}
 	seq_printf(seq, "\n");
 	return 0;

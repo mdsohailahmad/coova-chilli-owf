@@ -550,11 +550,18 @@ static void bstring_buildurl(bstring str, struct redir_conn_t *conn,
     } else
 #endif
 #ifdef HAVE_NETFILTER_COOVA
-  if(_options.kname && _options.vlanportal && conn->s_state.vlanId > 0) {
+  if(_options.kname) {
     bcatcstr(str, amp);
-    bcatcstr(str, "vlan=");
-    bassignformat(bt, "%d", conn->s_state.vlanId);
+    bcatcstr(str, "directinterface=");
+    bassignformat(bt, "%s", conn->s_state.direct_interface_name);
     bconcat(str, bt);
+
+	if(conn->s_state.bridged_interface_name[0]) {
+		bcatcstr(str, amp);
+		bcatcstr(str, "bridgedinterface=");
+		bassignformat(bt, "%s", conn->s_state.bridged_interface_name);
+		bconcat(str, bt);
+	}
   } else
 #endif
       if (redir->vlan) {

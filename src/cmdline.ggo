@@ -202,8 +202,6 @@ option "ssid"	     - "SSID of the session" string no
 option "vlan"	     - "VLAN of the session" string no
 option "ieee8021q"   - "Support 802.1Q VLAN tagging" flag off
 option "only8021q"   - "Support 802.1Q VLAN tagged traffic only" flag off
-option "vlanportal" - "Support for VLAN based portal in case of kernel mode" flag off
-option "vlanpat" - "Printf friendly vlan pattern" string default="vlan%d" no
 
 # Command Socket Support
 option "cmdsocket"   - "path to the command unix socket" string no

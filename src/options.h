@@ -416,8 +416,6 @@ struct options_t {
 
 #ifdef HAVE_NETFILTER_COOVA
   char *kname;
-  uint8_t vlanportal:1;
-  char *vlanpat;
 #endif
 
 #ifdef ENABLE_MODULES

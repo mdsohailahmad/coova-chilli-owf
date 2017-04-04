@@ -78,7 +78,7 @@ kmod_coova_sync() {
   unsigned long long int pin;
   unsigned long long int pout;
   struct dhcp_conn_t *conn;
-  char interface_name[IFNAMSIZ];
+  char direct_interface_name[IFNAMSIZ];
   char bridged_interface_name[IFNAMSIZ];
 
   if (!_options.kname) return -1;
@@ -96,16 +96,16 @@ kmod_coova_sync() {
     }
 
 	memset(bridged_interface_name, 0, IFNAMSIZ);
-	memset(interface_name, 0, IFNAMSIZ);
+	memset(direct_interface_name, 0, IFNAMSIZ);
 
     if (sscanf(line,
          "mac=%X-%X-%X-%X-%X-%X "
          "src=%s state=%u "
          "bin=%llu bout=%llu "
          "pin=%llu pout=%llu "
-		 "interface=%s br-interface=%s",
+		 "direct-interface=%s bridged-interface=%s",
          &maci[0], &maci[1], &maci[2], &maci[3], &maci[4], &maci[5],
-         ip, &state, &bin, &bout, &pin, &pout, interface_name, bridged_interface_name) >= 12) {
+         ip, &state, &bin, &bout, &pin, &pout, direct_interface_name, bridged_interface_name) >= 12) {
       uint8_t mac[6];
       int i;
 
@@ -147,9 +147,17 @@ kmod_coova_sync() {
 		struct in_addr in_ip;
 		int invalid_mac = 0;
 
-		for(i = 0; i < 6 && !mac[i]; i++); // checking all zeroes
-		if(i == 6)
-			invalid_mac = 1;
+		/*
+		 * Multicast / Broadcast is decided by the most significant (right most bit)
+		 * of the most significant byte (left most byte) of the mac ad dress
+		 */
+		invalid_mac = mac[0] << 5;
+
+		if(!invalid_mac) {
+			for(i = 0; i < 6 && !mac[i]; i++); // checking all zeroes
+			if(i == 6)
+				invalid_mac = 1;
+		}
 
 		if(!invalid_mac) {
 			for(i = 0; i < 6 && mac[i] == 0xff; i++); // checking all FF if it was not zero
@@ -182,23 +190,11 @@ kmod_coova_sync() {
 				}
 			  }
 
-			  if(interface_name[0])
-			 	strcpy(appconn->interface_name, interface_name);
+			  if(direct_interface_name[0])
+				  strcpy(appconn->s_state.direct_interface_name, direct_interface_name);
 
-			  if(bridged_interface_name[0]) {
-				  strcpy(appconn->bridged_interface_name, bridged_interface_name);
-				  appconn->bridged = 1;
-			  }
-
-			  if(_options.vlanportal) {
-				  int vlanId = 0;
-
-				  // prefer bridged_interface_name before interface_name for checking vlan pattern
-				  if(appconn->bridged_interface_name[0] && sscanf(appconn->bridged_interface_name, _options.vlanpat, &vlanId) == 1)
-					  appconn->s_state.vlanId = vlanId;
-				  else if(appconn->interface_name[0] && sscanf(appconn->interface_name, _options.vlanpat, &vlanId) == 1)
-					  appconn->s_state.vlanId = vlanId;
-			  }
+			  if(bridged_interface_name[0])
+				  strcpy(appconn->s_state.bridged_interface_name, bridged_interface_name);
 
 			if (_options.swapoctets) {
               appconn->s_state.input_octets = bin;

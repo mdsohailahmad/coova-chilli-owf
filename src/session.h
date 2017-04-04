@@ -174,7 +174,8 @@ struct session_state {
 #endif
 
 #ifdef HAVE_NETFILTER_COOVA
-  int vlanId;
+  char direct_interface_name[IFNAMSIZ];
+  char bridged_interface_name[IFNAMSIZ];
 #endif
 
 #ifdef ENABLE_LOCATION

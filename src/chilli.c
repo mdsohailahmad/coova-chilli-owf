@@ -5459,16 +5459,11 @@ int chilli_getinfo(struct app_conn_t *appconn, bstring b, int fmt) {
 
 #ifdef HAVE_NETFILTER_COOVA
 		if (_options.kname) {
-			if(_options.vlanportal && appconn->s_state.vlanId) {
-				bassignformat(tmp, " vlan=%d", appconn->s_state.vlanId);
-				bconcat(b, tmp);
-			}
-
-			bassignformat(tmp, " interface=%s", appconn->interface_name);
+			bassignformat(tmp, " direct-interface=%s", appconn->s_state.direct_interface_name);
 			bconcat(b, tmp);
 
-			if(appconn->bridged) {
-				bassignformat(tmp, " br-interface=%s", appconn->bridged_interface_name);
+			if(appconn->s_state.bridged_interface_name[0]) {
+				bassignformat(tmp, " bridged-interface=%s", appconn->s_state.bridged_interface_name);
 				bconcat(b, tmp);
 			}
 		}
@@ -5527,10 +5522,17 @@ void chilli_print(bstring s, int listfmt,
           bcatcstr(b, inet_ntoa(appconn->hisip));
           bcatcstr(b, "\"");
 #ifdef HAVE_NETFILTER_COOVA
-			if (_options.kname && _options.vlanportal && appconn->s_state.vlanId) {
-				bcatcstr(b,",\"vlan\":");
-				bassignformat(tmp, "%d", appconn->s_state.vlanId);
+			if (_options.kname) {
+				bcatcstr(b,",\"directInterface\":\"");
+				bassignformat(tmp, "%s", appconn->s_state.direct_interface_name);
 				bconcat(b, tmp);
+				bcatcstr(b, "\"");
+				if(appconn->s_state.bridged_interface_name[0]) {
+					bcatcstr(b, ",\"bridgedInterface\":\"");
+					bassignformat(tmp, "%s", appconn->s_state.bridged_interface_name);
+					bconcat(b, tmp);
+					bcatcstr(b, "\"");
+				}
 			}
 #endif
         }
