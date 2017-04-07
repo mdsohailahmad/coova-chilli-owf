@@ -240,12 +240,6 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		else
 			addr.ip = iph->saddr;
 
-		// do not match if first octet of the ip
-		// is 0 (no ip assigned), 127 (loopback), 224 (class d, e)
-		u8 firstoctet = (be32_to_cpu(addr.ip) >> 8*3) & 0xff;
-		if(firstoctet == 0 || firstoctet == 127 || firstoctet >= 224)
-			return ret;
-
 		p_bytes = be16_to_cpu(iph->tot_len);
 	} else {
 		const struct ipv6hdr *iph = ipv6_hdr(skb);
@@ -262,12 +256,6 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		if (skb_mac_header(skb) >= skb->head &&
 		    skb_mac_header(skb) + ETH_HLEN <= skb->data) {
 			hwaddr = eth_hdr(skb)->h_source;
-
-			// check brodcast / multicast
-			// the most significant bit (right most) of the
-			// most significant byte (left most) of mac address
-			if (hwaddr[0] << 5)
-				return ret;
 		} else {
 			return ret;
 		}

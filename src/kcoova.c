@@ -143,36 +143,9 @@ kmod_coova_sync() {
 		 * dhcp_getconn will allocate a new dhcp connection if does not exist
 		 */
 
-		// sanity check for broadcast addresses / macs
 		struct in_addr in_ip;
-		int invalid_mac = 0;
-
-		/*
-		 * Multicast / Broadcast is decided by the most significant (right most bit)
-		 * of the most significant byte (left most byte) of the mac ad dress
-		 */
-		invalid_mac = mac[0] << 5;
-
-		if(!invalid_mac) {
-			for(i = 0; i < 6 && !mac[i]; i++); // checking all zeroes
-			if(i == 6)
-				invalid_mac = 1;
-		}
-
-		if(!invalid_mac) {
-			for(i = 0; i < 6 && mac[i] == 0xff; i++); // checking all FF if it was not zero
-			if(i == 6)
-				invalid_mac = 1;
-		}
-
 		if(!inet_aton(ip, &in_ip)) // checking invalid ip
 			continue;
-
-		// invalid mac / broadcast
-		if(invalid_mac || in_ip.s_addr == _options.bcast.s_addr) {
-			kmod('*', &in_ip); // delete client from kernel module immediately
-			continue;
-		}
 
         if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
