@@ -512,7 +512,7 @@ static int coova_seq_show(struct seq_file *seq, void *v)
 		   (unsigned long long)e->pkts_in, 
 		   (unsigned long long)e->pkts_out);
 	seq_printf(seq, " direct-interface=%s", e->direct_interface_name);
-	if(e->bridged) {
+	if(e->bridged_interface_name[0]) {
 		seq_printf(seq, " bridged-interface=%s", e->bridged_interface_name);
 	}
 	seq_printf(seq, "\n");
