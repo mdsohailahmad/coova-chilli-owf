@@ -220,6 +220,18 @@ static void coova_table_flush(struct coova_table *t)
 			coova_entry_remove(t, e);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,0)
+static inline struct net_device *
+nf_bridge_get_physindev(const struct sk_buff *skb) {
+	return skb->nf_bridge ? skb->nf_bridge->physindev : NULL;
+}
+
+static inline struct net_device *
+nf_bridge_get_physoutdev(const struct sk_buff *skb) {
+	return skb->nf_bridge ? skb->nf_bridge->physoutdev : NULL;
+}
+#endif
+
 static bool
 coova_mt(const struct sk_buff *skb, struct xt_action_param *par) 
 {
