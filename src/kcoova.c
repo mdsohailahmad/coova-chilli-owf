@@ -149,7 +149,11 @@ kmod_coova_sync() {
 
         if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
+		  // set client last seen time
+		  conn->lasttime = mainclock_now();
           if (appconn) {
+			  appconn->s_state.last_up_time = appconn->s_state.last_time = mainclock_now();
+
 			  /*
 			   * Call dhcp->cb_request to allocate ip address 
 			   * do mac auth stuff
