@@ -159,6 +159,8 @@ static void coova_entry_reset(struct coova_entry *e)
 	e->bytes_out = 0;
 	e->pkts_in = 0;
 	e->pkts_out = 0;
+	memset(e->direct_interface_name, 0, IFNAMSIZ);
+	memset(e->bridged_interface_name, 0, IFNAMSIZ);
 }
 
 static struct coova_entry *
@@ -180,8 +182,6 @@ coova_entry_init(struct coova_table *t, const union nf_inet_addr *addr,
 	memcpy(&e->addr, addr, sizeof(e->addr));
 	e->index     = 1;
 	e->family    = family;
-	memcpy(&e->direct_interface_name, 0, IFNAMSIZ);
-	memcpy(&e->bridged_interface_name, 0, IFNAMSIZ);
 
 	coova_entry_reset(e);
 
@@ -317,7 +317,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		}
 		else if (e->bridged_interface_name[0]) {
 			// copy zeroes only if currently has some value
-			memcpy(e->bridged_interface_name, 0, IFNAMSIZ);
+			memset(e->bridged_interface_name, 0, IFNAMSIZ);
 		}
 	}
 
@@ -337,7 +337,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		}
 		else if(e->bridged_interface_name[0]) {
 			// copy zeroes only if currently has some value
-			memcpy(e->bridged_interface_name, 0, IFNAMSIZ);
+			memset(e->bridged_interface_name, 0, IFNAMSIZ);
 		}
 	}
 
