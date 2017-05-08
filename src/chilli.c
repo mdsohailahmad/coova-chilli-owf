@@ -2858,11 +2858,38 @@ int cb_redir_getstate(struct redir_t *redir,
   }
 #endif
 
+#ifdef HAVE_NETFILTER_COOVA
+  /* if client is not found
+   * run kmod_coova_sync
+   */
+  if (_options.kname) {
+	  int client_find_attempts = 0;
+	  int client_found = 0;
+	  do {
+		// reverse return code of ippool_getip
+		// -1 in case of not found
+		client_found = !ippool_getip(ippool, &ipm, addr);
+		if (!client_found) {
+			kmod_coova_sync();
+			if (_options.debug)
+				syslog(LOG_DEBUG, "%s(%d): did not find %s, so syncing kcoova", __FUNCTION__, __LINE__, inet_ntoa(*addr));
+		}
+		client_find_attempts++;
+	  } while(!client_found && client_find_attempts <= 2);
+
+	 if (!client_found) {
+		 if (_options.debug)
+			 syslog(LOG_DEBUG, "%s(%d): did not find %s after %d kcoova sync attempts", __FUNCTION__, __LINE__, inet_ntoa(*addr), client_find_attempts+1);
+		 return -1;
+	 }
+  }
+#else
   if (ippool_getip(ippool, &ipm, addr)) {
     if (_options.debug)
       syslog(LOG_DEBUG, "%s(%d): did not find %s", __FUNCTION__, __LINE__, inet_ntoa(*addr));
     return -1;
   }
+#endif
 
   if ( (appconn  = (struct app_conn_t *)ipm->peer)        == NULL ||
        (dhcpconn = (struct dhcp_conn_t *)appconn->dnlink) == NULL ) {
