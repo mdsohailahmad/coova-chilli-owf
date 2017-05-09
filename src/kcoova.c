@@ -80,6 +80,7 @@ kmod_coova_sync() {
   struct dhcp_conn_t *conn;
   char direct_interface_name[IFNAMSIZ];
   char bridged_interface_name[IFNAMSIZ];
+  time_t timestamp;
 
   if (!_options.kname) return -1;
 
@@ -103,9 +104,10 @@ kmod_coova_sync() {
          "src=%s state=%u "
          "bin=%llu bout=%llu "
          "pin=%llu pout=%llu "
-		 "direct-interface=%s bridged-interface=%s",
+		 "time=%lu "
+		 "direct-interface=%s bridged-interface=%s "
          &maci[0], &maci[1], &maci[2], &maci[3], &maci[4], &maci[5],
-         ip, &state, &bin, &bout, &pin, &pout, direct_interface_name, bridged_interface_name) >= 12) {
+         ip, &state, &bin, &bout, &pin, &pout, &timestamp, direct_interface_name, bridged_interface_name) >= 13) {
       uint8_t mac[6];
       int i;
 
@@ -150,9 +152,9 @@ kmod_coova_sync() {
         if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
           struct app_conn_t *appconn = conn->peer;
 		  // set client last seen time
-		  conn->lasttime = mainclock_now();
+		  conn->lasttime = timestamp;
           if (appconn) {
-			  appconn->s_state.last_up_time = appconn->s_state.last_time = mainclock_now();
+			  appconn->s_state.last_up_time = appconn->s_state.last_time = timestamp;
 
 			  /*
 			   * Call dhcp->cb_request to allocate ip address 

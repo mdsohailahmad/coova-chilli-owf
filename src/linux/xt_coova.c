@@ -36,6 +36,7 @@
 
 #include <linux/netfilter/x_tables.h>
 #include <linux/netfilter_bridge.h>
+#include <linux/time.h>
 #include "xt_coova.h"
 
 MODULE_AUTHOR("David Bird <david@coova.com>");
@@ -73,6 +74,7 @@ struct coova_entry {
 	unsigned char           hwaddr[ETH_ALEN];
 	u_int16_t		family;
 	u_int8_t		index;
+	struct timespec time;
 
 	u_int8_t                state;
 	u_int64_t		bytes_in;
@@ -161,6 +163,7 @@ static void coova_entry_reset(struct coova_entry *e)
 	e->pkts_out = 0;
 	memset(e->direct_interface_name, 0, IFNAMSIZ);
 	memset(e->bridged_interface_name, 0, IFNAMSIZ);
+	get_monotonic_boottime(&e->time);
 }
 
 static struct coova_entry *
@@ -285,6 +288,8 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 
 	if (hwaddr)
 		memcpy(e->hwaddr, hwaddr, ETH_ALEN);
+
+	get_monotonic_boottime(&e->time);
 
 	/*
 	 * Modification by nilesh
@@ -511,6 +516,7 @@ static int coova_seq_show(struct seq_file *seq, void *v)
 	seq_printf(seq, " pin=%llu pout=%llu", 
 		   (unsigned long long)e->pkts_in, 
 		   (unsigned long long)e->pkts_out);
+	seq_printf(seq, " time=%lu", e->time.tv_sec);
 	seq_printf(seq, " direct-interface=%s", e->direct_interface_name);
 	if(e->bridged_interface_name[0]) {
 		seq_printf(seq, " bridged-interface=%s", e->bridged_interface_name);
