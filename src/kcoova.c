@@ -105,7 +105,7 @@ kmod_coova_sync() {
          "bin=%llu bout=%llu "
          "pin=%llu pout=%llu "
 		 "time=%lu "
-		 "direct-interface=%s bridged-interface=%s "
+		 "direct-interface=%s bridged-interface=%s ",
          &maci[0], &maci[1], &maci[2], &maci[3], &maci[4], &maci[5],
          ip, &state, &bin, &bout, &pin, &pout, &timestamp, direct_interface_name, bridged_interface_name) >= 13) {
       uint8_t mac[6];
