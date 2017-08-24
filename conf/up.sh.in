@@ -28,7 +28,7 @@ run_up() {
 			ipt -A forwarding_from_lan -m coova -m comment --comment "'Allow authenticated clients LAN->WAN'" -j ACCEPT
 			ipt -A forwarding_to_lan -m coova --dest -m comment --comment "'Allow authenticated clients WAN->LAN'" -j ACCEPT
 			ipt -A prerouting_from_lan -t nat -p tcp --dport 80 -m set ! --match-set passthrough dst -m coova ! --checkclient \
-				-m comment --comment "'Redirect port 80 for non-passthrough, non-authenticated to UAM'" -j REDIRECT --to-ports $UAMPORT
+				-m comment --comment "'Redirect port 80 for non-passthrough, non-authenticated to UAM'" -j DNAT --to $ADDR:$UAMPORT
 
 			ipset add passthrough $ADDR
 			for pt in ${HS_UAMALLOW//,/ }; do
@@ -61,8 +61,8 @@ run_up() {
 		fi
 
 		if [[ $HS_LOCAL_DNS == on ]] && [[ $(uci get system.smartap.bridge_mode_without_vlan) -eq 0 ]]; then
-			ipt -A prerouting_from_lan -t nat -p udp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
-			ipt -A prerouting_from_lan -t nat -p tcp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j REDIRECT
+			ipt -A prerouting_from_lan -t nat -p udp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j DNAT --to $ADDR:53
+			ipt -A prerouting_from_lan -t nat -p tcp --dport 53 -m comment --comment "'Rewrite DNS to self'" -j DNAT --to $ADDR:53
 		else
 			ipt -A forwarding_from_lan -p udp --dport 53 -j ACCEPT
 			ipt -A forwarding_to_lan -p udp --sport 53 -j ACCEPT
@@ -70,7 +70,7 @@ run_up() {
 			ipt -A forwarding_to_lan -p tcp --sport 53 -j ACCEPT
 		fi
 
-		ipt -A prerouting_from_lan -t nat -d $ADDR -p tcp --dport 80 -m comment --comment "'Rewrite packets to self port 80 on LAN to UAM'" -j REDIRECT --to-ports $UAMPORT
+		ipt -A prerouting_from_lan -t nat -d $ADDR -p tcp --dport 80 -m comment --comment "'Rewrite packets to self port 80 on LAN to UAM'" -j DNAT --to $ADDR:$UAMPORT
 		/etc/init.d/firewall restart
 	fi
 }
