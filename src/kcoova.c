@@ -64,172 +64,191 @@ kmod_coova_clear() {
 
 int
 kmod_coova_sync() {
-  char file[128];
-  char * line = 0;
-  size_t len = 0;
-  ssize_t read;
-  FILE *fp;
+	char file[128];
+	char * line = 0;
+	size_t len = 0;
+	ssize_t read;
+	FILE *fp;
 
-  char ip[256];
-  unsigned int maci[6];
-  unsigned int state;
-  unsigned long long int bin;
-  unsigned long long int bout;
-  unsigned long long int pin;
-  unsigned long long int pout;
-  struct dhcp_conn_t *conn;
-  char direct_interface_name[IFNAMSIZ];
-  char bridged_interface_name[IFNAMSIZ];
-  time_t timestamp;
+	char ip[256];
+	unsigned int maci[6];
+	unsigned int state;
+	unsigned long long int bin;
+	unsigned long long int bout;
+	unsigned long long int pin;
+	unsigned long long int pout;
+	struct dhcp_conn_t *conn;
+	char direct_interface_name[IFNAMSIZ];
+	char bridged_interface_name[IFNAMSIZ];
+	time_t timestamp;
+	unsigned short zero_mac=0;
 
-  if (!_options.kname) return -1;
+	if (!_options.kname) return -1;
 
-  snprintf(file, sizeof(file), kname_fmt, _options.kname);
+	snprintf(file, sizeof(file), kname_fmt, _options.kname);
 
-  fp = fopen(file, "r");
-  if (fp == NULL)
-    return -1;
+	fp = fopen(file, "r");
+	if (fp == NULL)
+		return -1;
 
-  while ((read = getline(&line, &len, fp)) != -1) {
-    if (len > 256) {
-      syslog(LOG_ERR, "%s: problem", strerror(errno));
-      continue;
-    }
-
-	memset(bridged_interface_name, 0, IFNAMSIZ);
-	memset(direct_interface_name, 0, IFNAMSIZ);
-
-    if (sscanf(line,
-         "mac=%X-%X-%X-%X-%X-%X "
-         "src=%s state=%u "
-         "bin=%llu bout=%llu "
-         "pin=%llu pout=%llu "
-		 "time=%lu "
-		 "direct-interface=%s bridged-interface=%s ",
-         &maci[0], &maci[1], &maci[2], &maci[3], &maci[4], &maci[5],
-         ip, &state, &bin, &bout, &pin, &pout, &timestamp, direct_interface_name, bridged_interface_name) >= 13) {
-      uint8_t mac[6];
-      int i;
-
-      for (i=0;i<6;i++)
-        mac[i]=maci[i]&0xFF;
-
-#ifdef ENABLE_LAYER3
-      if (_options.layer3) {
-        struct in_addr in_ip;
-        struct app_conn_t *appconn = NULL;
-        if (!inet_aton(ip, &in_ip)) {
-            syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
-            return -1;
-        }
-        appconn = dhcp_get_appconn_ip(0, &in_ip);
-        if (appconn) {
-            if (_options.swapoctets) {
-                appconn->s_state.input_octets = bin;
-                appconn->s_state.output_octets = bout;
-                appconn->s_state.input_packets = pin;
-                appconn->s_state.output_packets = pout;
-            } else {
-                appconn->s_state.output_octets = bin;
-                appconn->s_state.input_octets = bout;
-                appconn->s_state.output_packets = pin;
-                appconn->s_state.input_packets = pout;
-          }
-        } else {
-            syslog(LOG_DEBUG, "Unknown entry");
-        }
-      } else {
-#endif
-		/* 
-		 * Changes by nilesh
-		 * dhcp_getconn will allocate a new dhcp connection if does not exist
-		 */
-
-		struct in_addr in_ip;
-		if(!inet_aton(ip, &in_ip)) // checking invalid ip
+	while ((read = getline(&line, &len, fp)) != -1) {
+		if (len > 256) {
+			syslog(LOG_ERR, "%s: problem", strerror(errno));
 			continue;
+		}
 
-        if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
-          struct app_conn_t *appconn = conn->peer;
-		  // set client last seen time
-		  conn->lasttime = timestamp;
-          if (appconn) {
-			  appconn->s_state.last_up_time = appconn->s_state.last_time = timestamp;
+		memset(bridged_interface_name, 0, IFNAMSIZ);
+		memset(direct_interface_name, 0, IFNAMSIZ);
 
-			  /*
-			   * Call dhcp->cb_request to allocate ip address 
-			   * do mac auth stuff
-			   */
-			  if(!appconn->uplink && dhcp->cb_request) {
-				 if(dhcp->cb_request(conn, &in_ip, NULL, 0)) {
-					syslog(LOG_ERR, "Unable to create new client for %s\n", ip);
-					// try to kick the client out of kernel module
-					// will appear again anyway if it is really present
-					kmod('*', &in_ip);
-				}
-			  }
+		if (sscanf(line,
+					"mac=%X-%X-%X-%X-%X-%X "
+					"src=%s state=%u "
+					"bin=%llu bout=%llu "
+					"pin=%llu pout=%llu "
+					"time=%lu "
+					"direct-interface=%s bridged-interface=%s ",
+					&maci[0], &maci[1], &maci[2], &maci[3], &maci[4], &maci[5],
+					ip, &state, &bin, &bout, &pin, &pout, &timestamp, direct_interface_name, bridged_interface_name) >= 13) {
+			uint8_t mac[6];
+			int i;
 
-			  if(direct_interface_name[0])
-				  strcpy(appconn->s_state.direct_interface_name, direct_interface_name);
+			for (i=0;i<6;i++){
+				mac[i]=maci[i]&0xFF;
+				zero_mac+=mac[i];
+			}
 
-			  if(bridged_interface_name[0])
-				  strcpy(appconn->s_state.bridged_interface_name, bridged_interface_name);
-
-			if (_options.swapoctets) {
-              appconn->s_state.input_octets = bin;
-              appconn->s_state.output_octets = bout;
-              appconn->s_state.input_packets = pin;
-              appconn->s_state.output_packets = pout;
-            } else {
-              /*
-               * Changes by Nilesh
-               * Synchronize authentication state of appconn and
-               * kernel module to update kernel module on firewall restarts
-               *
-               * Simiarly add up counters if kernel module reports less number
-               * compared to what we already have
-               */
-
-              if(appconn->s_state.authenticated != state)
-                kmod_coova_update(appconn);
-
-              if(bin < appconn->s_state.output_octets)
-                appconn->s_state.output_octets += bin;
-              else
-                appconn->s_state.output_octets = bin;
-
-              if(bout < appconn->s_state.input_octets)
-                appconn->s_state.input_octets += bout;
-              else
-                appconn->s_state.input_octets = bout;
-
-              if(pin < appconn->s_state.output_packets)
-                appconn->s_state.output_packets += pin;
-              else
-                appconn->s_state.output_packets = pin;
-
-              if(pout < appconn->s_state.input_packets)
-                appconn->s_state.input_packets += pout;
-              else
-                appconn->s_state.input_packets = pout;
-            }
-          } else {
-            syslog(LOG_DEBUG, "Unknown entry");
-          }
-        }
 #ifdef ENABLE_LAYER3
-      }
+			if (_options.layer3) {
+				struct in_addr in_ip;
+				struct app_conn_t *appconn = NULL;
+				if (!inet_aton(ip, &in_ip)) {
+					syslog(LOG_ERR, "Invalid IP Address: %s\n", ip);
+					return -1;
+				}
+				appconn = dhcp_get_appconn_ip(0, &in_ip);
+				if (appconn) {
+					if (_options.swapoctets) {
+						appconn->s_state.input_octets = bin;
+						appconn->s_state.output_octets = bout;
+						appconn->s_state.input_packets = pin;
+						appconn->s_state.output_packets = pout;
+					} else {
+						appconn->s_state.output_octets = bin;
+						appconn->s_state.input_octets = bout;
+						appconn->s_state.output_packets = pin;
+						appconn->s_state.input_packets = pout;
+					}
+				} else {
+					syslog(LOG_DEBUG, "Unknown entry");
+				}
+			} else {
 #endif
-    } else {
-      syslog(LOG_ERR, "%s: Error parsing %s", strerror(errno), line);
-    }
-  }
+				/* 
+				 * Changes by nilesh
+				 * dhcp_getconn will allocate a new dhcp connection if does not exist
+				 */
 
-  if (line)
-    free(line);
+				struct in_addr in_ip;
+				if(!inet_aton(ip, &in_ip)) // checking invalid ip
+					continue;
 
-  fclose(fp);
+				if(!zero_mac){
+					if(!dhcp_getconn (dhcp, &conn, mac, NULL, 0)) {
+						syslog(LOG_INFO, "Releasing client mac " MAC_FMT ", IP %s is not part of configured subnet", 
+															MAC_ARG(mac), inet_ntoa(in_ip));
+						dhcp_freeconn (conn, RADIUS_TERMINATE_CAUSE_USER_ERROR);
+					}
+					continue;
+				}
 
-  return 0;
+				if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
+					struct app_conn_t *appconn = conn->peer;
+					// set client last seen time
+					conn->lasttime = timestamp;
+					if (appconn) {
+						appconn->s_state.last_up_time = appconn->s_state.last_time = timestamp;
+
+						/*
+						 * Call dhcp->cb_request to allocate ip address 
+						 * do mac auth stuff
+						 */
+						if(!appconn->uplink && dhcp->cb_request) {
+							if(dhcp->cb_request(conn, &in_ip, NULL, 0)) {
+								syslog(LOG_ERR, "Unable to create new client for %s\n", ip);
+								// try to kick the client out of kernel module
+								// will appear again anyway if it is really present
+								kmod('*', &in_ip);
+							}
+						}
+
+						if(direct_interface_name[0])
+							strcpy(appconn->s_state.direct_interface_name, direct_interface_name);
+
+						if(bridged_interface_name[0])
+							strcpy(appconn->s_state.bridged_interface_name, bridged_interface_name);
+
+						if (_options.swapoctets) {
+							appconn->s_state.input_octets = bin;
+							appconn->s_state.output_octets = bout;
+							appconn->s_state.input_packets = pin;
+							appconn->s_state.output_packets = pout;
+						} else {
+							/*
+							 * Changes by Nilesh
+							 * Synchronize authentication state of appconn and
+							 * kernel module to update kernel module on firewall restarts
+							 *
+							 * Simiarly add up counters if kernel module reports less number
+							 * compared to what we already have
+							 */
+
+							if(appconn->s_state.authenticated != state)
+								kmod_coova_update(appconn);
+							/*
+							if(bin < appconn->s_state.output_octets)
+								appconn->s_state.output_octets += bin;
+							else
+							*/
+							appconn->s_state.output_octets = bin;
+							
+							/*
+							if(bout < appconn->s_state.input_octets)
+								appconn->s_state.input_octets += bout;
+							else
+							*/
+							appconn->s_state.input_octets = bout;
+
+							/*
+							if(pin < appconn->s_state.output_packets)
+								appconn->s_state.output_packets += pin;
+							else
+							*/
+							appconn->s_state.output_packets = pin;
+
+							/*
+							if(pout < appconn->s_state.input_packets)
+								appconn->s_state.input_packets += pout;
+							else
+							*/
+							appconn->s_state.input_packets = pout;
+						}
+					} else {
+						syslog(LOG_DEBUG, "Unknown entry");
+					}
+				}
+#ifdef ENABLE_LAYER3
+			}
+#endif
+		} else {
+			syslog(LOG_ERR, "%s: Error parsing %s", strerror(errno), line);
+		}
+	}
+
+	if (line)
+		free(line);
+
+	fclose(fp);
+
+	return 0;
 }
 
