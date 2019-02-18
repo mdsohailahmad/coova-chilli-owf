@@ -5620,6 +5620,7 @@ void chilli_print(bstring s, int listfmt,
 
 static void
 clear_appconn(struct app_conn_t *appconn) {
+	/*
   appconn->s_params.bandwidthmaxup =
       appconn->s_params.bandwidthmaxdown =
       appconn->s_params.maxinputoctets =
@@ -5629,6 +5630,9 @@ clear_appconn(struct app_conn_t *appconn) {
   appconn->s_params.idletimeout = 0;
   appconn->s_params.interim_interval = 0;
   appconn->s_params.sessionterminatetime = 0;
+	*/
+	memset(&appconn->s_state, 0, sizeof(appconn->s_state));
+	memset(&appconn->s_params, 0, sizeof(appconn->s_params));
 }
 
 int terminate_appconn(struct app_conn_t *appconn, int terminate_cause) {
