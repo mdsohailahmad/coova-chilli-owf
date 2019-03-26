@@ -118,6 +118,7 @@
 #endif
 
 #ifdef HAVE_SYS_SYSINFO_H
+#define _LINUX_SYSINFO_H
 #include <sys/sysinfo.h>
 #else
 #ifdef HAVE_LINUX_SYSINFO_H
