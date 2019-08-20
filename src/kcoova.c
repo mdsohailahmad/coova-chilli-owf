@@ -81,7 +81,7 @@ kmod_coova_sync() {
 	char direct_interface_name[IFNAMSIZ];
 	char bridged_interface_name[IFNAMSIZ];
 	time_t timestamp;
-	unsigned short zero_mac=0;
+	unsigned short zero_mac=1;
 
 	if (!_options.kname) return -1;
 
@@ -114,7 +114,8 @@ kmod_coova_sync() {
 
 			for (i=0;i<6;i++){
 				mac[i]=maci[i]&0xFF;
-				zero_mac+=mac[i];
+				if(zero_mac)
+					zero_mac=!mac[i];
 			}
 
 #ifdef ENABLE_LAYER3
@@ -152,17 +153,36 @@ kmod_coova_sync() {
 				if(!inet_aton(ip, &in_ip)) // checking invalid ip
 					continue;
 
-				if(!zero_mac){
+				if(zero_mac){
+					/*Delete Zero MAC record*/
 					if(!dhcp_getconn (dhcp, &conn, mac, NULL, 0)) {
-						syslog(LOG_INFO, "Releasing client mac " MAC_FMT ", IP %s is not part of configured subnet", 
+						syslog(LOG_INFO, "Releasing zero mac record" MAC_FMT ", IP is %s", 
 															MAC_ARG(mac), inet_ntoa(in_ip));
 						dhcp_freeconn (conn, RADIUS_TERMINATE_CAUSE_USER_ERROR);
 					}
 					continue;
 				}
 
+				if(!in_ip.s_addr){
+					syslog(LOG_ERR, "Ignoring mac record" MAC_FMT ", Invalid IP is %s", 
+															MAC_ARG(mac), inet_ntoa(in_ip));
+					continue;
+				}
+
 				if (!dhcp_getconn(dhcp, &conn, mac, NULL, 1)) {
 					struct app_conn_t *appconn = conn->peer;
+
+					if (!appconn)
+						continue;
+
+					if (appconn->hisip.s_addr && in_ip.s_addr && appconn->hisip.s_addr != in_ip.s_addr) {
+						char *oldIp = strdup(inet_ntoa(appconn->hisip));
+						syslog(LOG_ERR, "Client MAC " MAC_FMT " changed IP from %s to %s, deleting client", MAC_ARG(mac), oldIp, ip);
+						dhcp_freeconn (conn, RADIUS_TERMINATE_CAUSE_USER_ERROR);
+						free (oldIp);
+						continue;
+					}		
+
 					// set client last seen time
 					conn->lasttime = timestamp;
 					if (appconn) {
