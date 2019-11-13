@@ -3999,6 +3999,13 @@ config_radius_session(struct session_params *params,
   /*int is_splash = 0;*/
   int seen;
 
+ if (reconfig) {
+	if(radius_getattr(pack, &attr, RADIUS_ATTR_VENDOR_SPECIFIC, RADIUS_VENDOR_COOVACHILLI, RADIUS_ATTR_COOVACHILLI_OTHER_LOGOUT_USER, 0) != -1) {
+		terminate_appconn(appconn, RADIUS_TERMINATE_CAUSE_LOST_SERVICE);
+		return;
+	}
+}
+
   /* Session timeout */
   if (!radius_getattr(pack, &attr, RADIUS_ATTR_SESSION_TIMEOUT, 0, 0, 0))
     params->sessiontimeout = ntohl(attr->v.i);

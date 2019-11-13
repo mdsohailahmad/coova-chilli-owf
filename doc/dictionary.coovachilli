@@ -89,6 +89,7 @@ ATTRIBUTE       CoovaChilli-Other-Input-Octets	       84	integer
 ATTRIBUTE       CoovaChilli-Other-Output-Octets	       85	integer
 ATTRIBUTE       CoovaChilli-Other-Input-Gigawords       86	integer
 ATTRIBUTE       CoovaChilli-Other-Output-Gigawords      87	integer
+ATTRIBUTE	WifiSoft-Logout-User 90 integer
 
 # Configuration management parameters (CoovaChilli Only)
 ATTRIBUTE	CoovaChilli-UAM-Allowed			100	string
