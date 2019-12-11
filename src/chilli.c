@@ -4001,7 +4001,8 @@ config_radius_session(struct session_params *params,
 
  if (reconfig) {
 	if(radius_getattr(pack, &attr, RADIUS_ATTR_VENDOR_SPECIFIC, RADIUS_VENDOR_COOVACHILLI, RADIUS_ATTR_COOVACHILLI_OTHER_LOGOUT_USER, 0) != -1) {
-		terminate_appconn(appconn, RADIUS_TERMINATE_CAUSE_LOST_SERVICE);
+		terminate_appconn(appconn, RADIUS_TERMINATE_CAUSE_NAS_REQUEST);
+		syslog(LOG_INFO, "Logged out user %s via interim", appconn->s_state.redir.username);
 		return;
 	}
 }
