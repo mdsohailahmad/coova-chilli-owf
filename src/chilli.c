@@ -4320,6 +4320,38 @@ config_radius_session(struct session_params *params,
     params->sessionterminatetime = 0;
 
   session_param_defaults(params);
+  //Wifi-soft changes to support FUP released in WiOS2.5
+  //09 Jan 2019
+  if (reconfig) 
+  {
+	  // run the tc manager scripts only if bandwidth speed is changed
+	  // old rules will be deleted by runscript which will run the down script itself
+	  int run_tc_script = 0;
+
+	  if (appconn->s_params.bandwidthmaxup != appconn->s_params.old_bandwidthmaxup) 
+		  run_tc_script = 1;
+	  
+
+	  if (appconn->s_params.bandwidthmaxdown != appconn->s_params.old_bandwidthmaxdown) 
+		  run_tc_script = 1;
+
+	  if (run_tc_script && _options.conup && !(appconn->s_params.flags & NO_SCRIPT))
+	  {
+      		  syslog(LOG_INFO, "Speed change request of user %s via interim: olddown=%llu, newdown=%llu, oldup=%llu, newup=%llu ", 
+							appconn->s_state.redir.username, 
+							appconn->s_params.old_bandwidthmaxdown,appconn->s_params.bandwidthmaxdown,
+							appconn->s_params.old_bandwidthmaxup, appconn->s_params.bandwidthmaxup );
+		  appconn->s_params.old_bandwidthmaxup	= appconn->s_params.bandwidthmaxup;
+		  appconn->s_params.old_bandwidthmaxdown= appconn->s_params.bandwidthmaxdown;
+		  runscript(appconn, _options.conup, 0, 0);
+	  }
+  }
+  else {
+	// this will be executed when config_radius_session is called from authentication packet received
+
+	appconn->s_params.old_bandwidthmaxup   = appconn->s_params.bandwidthmaxup;
+	appconn->s_params.old_bandwidthmaxdown = appconn->s_params.bandwidthmaxdown;
+  }
 }
 
 static int chilliauth_cb(struct radius_t *radius,

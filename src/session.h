@@ -30,7 +30,9 @@ struct session_params {
   uint8_t filteridlen;
   uint8_t routeidx;
   uint64_t bandwidthmaxup;
+  uint64_t old_bandwidthmaxup;
   uint64_t bandwidthmaxdown;
+  uint64_t old_bandwidthmaxdown;
   uint64_t maxinputoctets;
   uint64_t maxoutputoctets;
   uint64_t maxtotaloctets;
