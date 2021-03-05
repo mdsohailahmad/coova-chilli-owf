@@ -33,5 +33,11 @@ if [ ${CONTENT_LENGTH:-0} -gt 0 ]; then
     $haserl $file < $POST_FILE
     /bin/rm -f $POST_FILE
 else
-    $haserl --shell=/bin/bash $file
+    $haserl --shell=/bin/bash $file > /tmp/response.$$
+    response_bytes=$(wc -c /tmp/response.$$ | awk '{ print $1 }')
+    echo -e -n "HTTP/1.0 200 OK\r\n"
+    echo -e -n "Content-Type: text/html; charset=utf-8\r\n"
+    echo -e -n "Content-Length: $response_bytes\r\n\r\n"
+    cat /tmp/response.$$
+    /bin/rm -f /tmp/response.$$
 fi
