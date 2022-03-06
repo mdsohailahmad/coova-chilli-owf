@@ -203,8 +203,8 @@ struct chilli_peer {
 #endif
 
 #ifdef ENABLE_STATFILE
-int printstatus();
-int loadstatus();
+int printstatus(void);
+int loadstatus(void);
 #endif
 
 int chilli_connect(struct app_conn_t **appconn, struct dhcp_conn_t *conn);
@@ -263,16 +263,16 @@ int dnprot_reject(struct app_conn_t *appconn);
 
 int get_urlparts(char *src, char *host, int hostsize, int *port, int *uripos);
 
-int cmdsock_init();
+int cmdsock_init(void);
 
-int cmdsock_port_init();
+int cmdsock_port_init(void);
 
 void cmdsock_shutdown();
 
-time_t mainclock_tick();
-time_t mainclock_now();
-time_t mainclock_rt();
-time_t mainclock_wall();
+time_t mainclock_tick(void);
+time_t mainclock_now(void);
+time_t mainclock_rt(void);
+time_t mainclock_wall(void);
 time_t mainclock_towall(time_t t);
 int mainclock_diff(time_t past);
 uint32_t mainclock_diffu(time_t past);
@@ -297,8 +297,8 @@ int chilli_learn_location(uint8_t *loc, int loclen,
 #ifdef HAVE_NETFILTER_COOVA
 int kmod_coova_update(struct app_conn_t *appconn);
 int kmod_coova_release(struct dhcp_conn_t *conn);
-int kmod_coova_sync();
-int kmod_coova_clear();
+int kmod_coova_sync(void);
+int kmod_coova_clear(void);
 #endif
 
 #ifdef HAVE_OPENSSL
@@ -326,7 +326,7 @@ uint8_t* chilli_called_station(struct session_state *state);
 int chilli_cmd(struct cmdsock_request *req, bstring s, int sock);
 
 int chilli_handle_signal(void *ctx, int fd);
-void chilli_freeconn();
+void chilli_freeconn(void);
 
 int runscript(struct app_conn_t *appconn, char* script,
 	      char *loc, char *oloc);
@@ -350,10 +350,10 @@ int selfpipe_init (void);
 int selfpipe_read (void);
 int selfpipe_trap (int signo);
 int selfpipe_ignore (int signo);
-void selfpipe_finish();
+void selfpipe_finish(void);
 
 #ifdef ENABLE_LOCATION
-void location_init();
+void location_init(void);
 #ifdef HAVE_AVL
 
 struct loc_search_t {

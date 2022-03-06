@@ -29,7 +29,7 @@ extern struct ippool_t *ippool;
 #ifdef ENABLE_BINSTATFILE
 static int has_loaded = 0;
 
-int loadstatus() {
+int loadstatus(void) {
   char filedest[512];
   FILE *file;
   char c;
@@ -317,7 +317,7 @@ int loadstatus() {
   return 0;
 }
 
-int printstatus() {
+int printstatus(void) {
   char filedest[512];
   time_t tm;
   FILE *file;
@@ -385,12 +385,12 @@ int printstatus() {
 }
 #else
 #ifdef ENABLE_STATFILE
-int loadstatus() {
+int loadstatus(void) {
   printstatus();
   return 0;
 }
 
-int printstatus() {
+int printstatus(void) {
   FILE *file;
   char filedest[512];
 

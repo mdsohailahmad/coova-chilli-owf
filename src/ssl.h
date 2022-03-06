@@ -41,12 +41,15 @@ typedef struct {
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 #include <openssl/engine.h>
+#include <openssl/err.h>
 #elif HAVE_CYASSL
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
 
+#define OPENSSL_NO_ENGINE
+#include <cyassl/options.h>
 #include <cyassl/ssl.h>
 #include <cyassl/openssl/bio.h>
 #include <cyassl/openssl/crypto.h>

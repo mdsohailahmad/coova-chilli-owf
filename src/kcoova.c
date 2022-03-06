@@ -58,7 +58,7 @@ kmod_coova_release(struct dhcp_conn_t *conn) {
 }
 
 int
-kmod_coova_clear() {
+kmod_coova_clear(void) {
   return kmod('/', 0);
 }
 
@@ -69,7 +69,6 @@ kmod_coova_sync() {
 	size_t len = 0;
 	ssize_t read;
 	FILE *fp;
-
 	char ip[256];
 	unsigned int maci[6];
 	unsigned int state;

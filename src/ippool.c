@@ -36,6 +36,8 @@ int ippool_print(int fd, struct ippool_t *this) {
 
 #define ERR 0
 #define IPPOOL_USED 1
+#undef USED /* defined in <wolfssl/wolfcrypt/integer.h> */
+#define USED 1
 #define FREE 2
 #define LIST 3
   int dyn[4] = { 0, 0, 0, 0};
