@@ -7942,7 +7942,7 @@ int chilli_main(int argc, char **argv) {
 
     syslog(LOG_INFO, "CoovaChilli shutting down");
 
-    if (_options.seskeepalive) {
+    if (_options.seskeepalive) { 
 #ifdef ENABLE_BINSTATFILE
       if (printstatus() != 0)
         syslog(LOG_ERR, "%s: could not save status file", strerror(errno));

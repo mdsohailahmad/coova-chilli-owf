@@ -163,7 +163,7 @@ static void coova_entry_reset(struct coova_entry *e)
 	e->pkts_out = 0;
 	memset(e->direct_interface_name, 0, IFNAMSIZ);
 	memset(e->bridged_interface_name, 0, IFNAMSIZ);
-	get_monotonic_boottime(&e->time);
+	//get_monotonic_boottime(&e->time);
 }
 
 static struct coova_entry *
@@ -246,6 +246,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	bool ret = 0;
 
 	uint16_t p_bytes = 0;
+	struct net_device *bridge_dev = NULL; 
 
 	if (par->match->family == AF_INET) {
 		const struct iphdr *iph = ip_hdr(skb);
@@ -289,7 +290,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	if (hwaddr)
 		memcpy(e->hwaddr, hwaddr, ETH_ALEN);
 
-	get_monotonic_boottime(&e->time);
+	//get_monotonic_boottime(&e->time);
 
 	/*
 	 * Modification by nilesh
@@ -316,7 +317,7 @@ coova_mt(const struct sk_buff *skb, struct xt_action_param *par)
 			memcpy(e->direct_interface_name, skb->dev->name, IFNAMSIZ);
 		}
 
-		struct net_device *bridge_dev = nf_bridge_get_physindev(skb);
+		bridge_dev = nf_bridge_get_physindev(skb);
 		if (bridge_dev) {
 			memcpy(e->bridged_interface_name, bridge_dev->name, IFNAMSIZ);
 		}
