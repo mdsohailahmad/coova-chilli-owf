@@ -15,8 +15,12 @@ if [ -z "$haserl" ]; then
     if [ -e "$file.sh" ]; then
 	sh $file.sh
     else
-	echo "<p>You need to install haserl to serve pages with this wwwsh script!</p>"
-	echo "<p>see <a href='http://haserl.sourceforge.net/'>http://haserl.sourceforge.net/</a></p>"
+	echo "<p>You need to install haserl to serve pages with this wwwsh script!</p>" >  /tmp/response.$$
+	echo "<p>see <a href='http://haserl.sourceforge.net/'>http://haserl.sourceforge.net/</a></p>" >>  /tmp/response.$$
+    	response_bytes=$(wc -c /tmp/response.$$ | awk '{ print $1 }')
+    	echo -e -n "HTTP/1.0 200 OK\r\n"
+    	echo -e -n "Content-Type: text/html; charset=utf-8\r\n"
+    	echo -e -n "Content-Length: $response_bytes\r\n\r\n"
     fi
     exit
 fi
